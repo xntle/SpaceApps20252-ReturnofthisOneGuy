@@ -3,9 +3,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, animate, useMotionValue } from "framer-motion";
+import StarshadeDotMark from "./ui/starshade";
 
-const PLACEHOLDER_ACTIVE = 128; // TODO: replace with API value
-const PLACEHOLDER_DATA = 12457890; // TODO: replace with API value
+const PLACEHOLDER_ACTIVE = 128;
+const PLACEHOLDER_DATA = 12457890;
 
 function CounterNumber({
   to,
@@ -33,6 +34,17 @@ export function Hero() {
   return (
     <section className="relative z-10 flex min-h-[100svh] items-center justify-center">
       <div className="text-center px-6">
+        {/* centered starshade */}
+        <StarshadeDotMark
+          size={84}
+          petals={18}
+          spacing={4.5}
+          dotR={1.1}
+          intro
+          rotate
+          className="mx-auto mb-8"
+        />
+
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -67,7 +79,7 @@ export function Hero() {
           </Link>
         </motion.div>
 
-        {/* Stats row (placeholders now, wire to API later) */}
+        {/* Stats */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
