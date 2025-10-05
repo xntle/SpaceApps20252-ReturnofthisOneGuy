@@ -51,7 +51,7 @@ export function Hero() {
           transition={{ duration: 1.2, ease: "easeOut" }}
           className="text-[8vw] leading-[0.95] font-semibold tracking-tight select-none"
         >
-          returnofthisoneguy
+          nasa-exo-iden-v1
         </motion.h1>
 
         <motion.p
@@ -60,8 +60,8 @@ export function Hero() {
           transition={{ delay: 0.4, duration: 1 }}
           className="mt-6 max-w-2xl mx-auto text-white/70"
         >
-          Somejsfdjnfdksnfksd fsdj fjhksd f sd fjs fj sdj fjs jsdf jhs fjds
-          fsdjh
+          AI supported exoplanet identification using multimodal machine
+          learning algorithm.
         </motion.p>
 
         {/* CTA */}
@@ -77,10 +77,16 @@ export function Hero() {
           >
             Start
           </Link>
+          <Link
+            href="https://github.com/DDH2004/SpaceApps2025-ReturnofthisOneGuy"
+            className="px-6 py-3 rounded-2xl bg-white text-black font-medium hover:opacity-90 transition focus:outline-none focus:ring-2 focus:ring-white/40"
+          >
+            Github
+          </Link>
         </motion.div>
 
         {/* Stats */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.0, duration: 0.6, ease: "easeOut" }}
@@ -98,7 +104,7 @@ export function Hero() {
               <CounterNumber to={PLACEHOLDER_DATA} />
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
       </div>
     </section>
   );
