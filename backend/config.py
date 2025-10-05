@@ -31,10 +31,12 @@ MAX_WORKERS = int(os.getenv("MAX_WORKERS", 4))
 WORKER_TIMEOUT = int(os.getenv("WORKER_TIMEOUT", 300))  # 5 minutes
 HEARTBEAT_INTERVAL = int(os.getenv("HEARTBEAT_INTERVAL", 30))  # 30 seconds
 
-# Model Configuration
-MODEL_PATH = os.getenv("MODEL_PATH", "./models/random_forest_model.joblib")
-PREPROCESSOR_PATH = os.getenv("PREPROCESSOR_PATH", "./models/preprocessor.joblib")
-FEATURE_COLUMNS_PATH = os.getenv("FEATURE_COLUMNS_PATH", "./models/feature_columns.txt")
+# Model Configuration - Using AI_Model_Forest trained models
+MODEL_PATH = os.getenv("MODEL_PATH", "./AI_Model_Forest/trained_model/rf_combined_model.joblib")
+PREPROCESSOR_PATH = os.getenv("PREPROCESSOR_PATH", "./AI_Model_Forest/trained_model/scaler_combined.joblib")
+FEATURE_COLUMNS_PATH = os.getenv("FEATURE_COLUMNS_PATH", "./AI_Model_Forest/trained_model/feature_columns_combined.txt")
+LABEL_ENCODER_PATH = os.getenv("LABEL_ENCODER_PATH", "./AI_Model_Forest/trained_model/label_encoder_combined.joblib")
+IMPUTER_PATH = os.getenv("IMPUTER_PATH", "./AI_Model_Forest/trained_model/imputer_medians_combined.joblib")
 
 # Task Configuration
 MAX_BATCH_SIZE = int(os.getenv("MAX_BATCH_SIZE", 1000))

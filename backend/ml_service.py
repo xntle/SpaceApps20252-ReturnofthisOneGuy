@@ -9,7 +9,7 @@ from pathlib import Path
 import time
 
 from models import ExoplanetPredictionRequest, PredictionResult
-from config import MODEL_PATH, PREPROCESSOR_PATH, FEATURE_COLUMNS_PATH, FEATURE_DEFAULTS
+from config import MODEL_PATH, PREPROCESSOR_PATH, FEATURE_COLUMNS_PATH, FEATURE_DEFAULTS, LABEL_ENCODER_PATH, IMPUTER_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -20,29 +20,44 @@ class ExoplanetPredictor:
     
     def __init__(self):
         self.model: RandomForestClassifier = None
-        self.preprocessor: StandardScaler = None
+        self.scaler: StandardScaler = None
+        self.label_encoder = None
+        self.imputer = None
         self.feature_columns: List[str] = []
         self.is_loaded = False
         
     def load_model(self) -> bool:
-        """Load the trained Random Forest model and preprocessor"""
+        """Load the trained Random Forest model and all preprocessing components"""
         try:
-            # Load model
+            # Load Random Forest model
             if Path(MODEL_PATH).exists():
                 self.model = joblib.load(MODEL_PATH)
-                logger.info(f"Model loaded from {MODEL_PATH}")
+                logger.info(f"Random Forest model loaded from {MODEL_PATH}")
             else:
                 logger.error(f"Model file not found: {MODEL_PATH}")
                 return False
             
-            # Load preprocessor
+            # Load scaler
             if Path(PREPROCESSOR_PATH).exists():
-                self.preprocessor = joblib.load(PREPROCESSOR_PATH)
-                logger.info(f"Preprocessor loaded from {PREPROCESSOR_PATH}")
+                self.scaler = joblib.load(PREPROCESSOR_PATH)
+                logger.info(f"Scaler loaded from {PREPROCESSOR_PATH}")
             else:
-                logger.warning(f"Preprocessor file not found: {PREPROCESSOR_PATH}")
-                # Create a default preprocessor
-                self.preprocessor = StandardScaler()
+                logger.warning(f"Scaler file not found: {PREPROCESSOR_PATH}")
+                self.scaler = StandardScaler()
+            
+            # Load label encoder
+            if Path(LABEL_ENCODER_PATH).exists():
+                self.label_encoder = joblib.load(LABEL_ENCODER_PATH)
+                logger.info(f"Label encoder loaded from {LABEL_ENCODER_PATH}")
+            else:
+                logger.warning(f"Label encoder file not found: {LABEL_ENCODER_PATH}")
+            
+            # Load imputer
+            if Path(IMPUTER_PATH).exists():
+                self.imputer = joblib.load(IMPUTER_PATH)
+                logger.info(f"Imputer loaded from {IMPUTER_PATH}")
+            else:
+                logger.warning(f"Imputer file not found: {IMPUTER_PATH}")
             
             # Load feature columns
             if Path(FEATURE_COLUMNS_PATH).exists():
