@@ -72,7 +72,7 @@ export function Hero() {
           className="mt-10 flex items-center justify-center gap-4"
         >
           <Link
-            href="/login"
+            href="/dashboard"
             className="px-6 py-3 rounded-2xl bg-white text-black font-medium hover:opacity-90 transition focus:outline-none focus:ring-2 focus:ring-white/40"
           >
             Start
