@@ -4,24 +4,26 @@ import React, { useEffect, useRef } from "react";
 import { buildScene, drawFrame, type SceneConfig } from "@/lib/dots";
 
 export function ExoDotsCanvas({ className = "" }: { className?: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const lastRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const roRef = useRef<ResizeObserver | null>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d", { alpha: true })!;
+    const cnv = canvasRef.current;
+    if (!cnv) return;
 
-    // Device pixel ratio capped for perf
+    const ctx = cnv.getContext("2d", { alpha: true });
+    if (!ctx) return;
+    ctxRef.current = ctx;
+
     const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-
-    let w = 0,
-      h = 0,
-      t = 0,
-      raf = 0;
+    let t = 0;
 
     const mouse = { x: 0, y: 0 };
     const center = { x: 0, y: 0 };
 
-    // Build the scene containers
     const scene: SceneConfig = {
       DPR,
       width: 0,
@@ -31,56 +33,77 @@ export function ExoDotsCanvas({ className = "" }: { className?: string }) {
       stars: [],
       planets: [],
       settings: {
-        starDensity: 1 / 6500, // stars per px^2
+        starDensity: 1 / 6500,
         glow: true,
         swirlStrength: 0.0006,
         maxShadowBlur: 6,
       },
     };
 
-    function resize() {
-      w = canvas.clientWidth;
-      h = canvas.clientHeight;
+    const resize = () => {
+      const c = canvasRef.current;
+      const cctx = ctxRef.current;
+      if (!c || !cctx) return;
+
+      const w = c.clientWidth;
+      const h = c.clientHeight;
+
       scene.width = w;
       scene.height = h;
-      canvas.width = Math.floor(w * DPR);
-      canvas.height = Math.floor(h * DPR);
-      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+      // set backing store size
+      c.width = Math.floor(w * DPR);
+      c.height = Math.floor(h * DPR);
+      cctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
       center.x = w / 2;
       center.y = h / 2;
-      buildScene(scene);
-    }
 
-    function onPointer(e: PointerEvent) {
-      const rect = canvas.getBoundingClientRect();
+      buildScene(scene);
+    };
+
+    const onPointer = (e: PointerEvent) => {
+      const c = canvasRef.current;
+      if (!c) return;
+      const rect = c.getBoundingClientRect();
+      const w = c.clientWidth;
+      const h = c.clientHeight;
       mouse.x = e.clientX - rect.left - w / 2;
       mouse.y = e.clientY - rect.top - h / 2;
-    }
+    };
 
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-    window.addEventListener("pointermove", onPointer);
-    resize();
+    const loop = () => {
+      const cctx = ctxRef.current;
+      const c = canvasRef.current;
+      if (!c || !cctx) return; // stop if unmounted
 
-    function loop() {
       const now = performance.now();
-      // keep last in closure via property on loop
-      const last = (loop as any)._last ?? now;
-      const dt = (now - last) / 1000; // seconds
-      (loop as any)._last = now;
+      const last = lastRef.current ?? now;
+      const dt = (now - last) / 1000;
+      lastRef.current = now;
 
-      t += dt; // real time delta for smooth animation
-      drawFrame(ctx, scene, t);
-      raf = requestAnimationFrame(loop);
+      t += dt;
+      drawFrame(cctx, scene, t);
+      rafRef.current = requestAnimationFrame(loop);
+    };
+
+    // Observe size
+    if (typeof ResizeObserver !== "undefined") {
+      roRef.current = new ResizeObserver(resize);
+      roRef.current.observe(cnv);
     }
-    raf = requestAnimationFrame(loop);
+
+    window.addEventListener("pointermove", onPointer, { passive: true });
+    resize();
+    rafRef.current = requestAnimationFrame(loop);
 
     return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      roRef.current?.disconnect();
       window.removeEventListener("pointermove", onPointer);
+      ctxRef.current = null;
     };
   }, []);
 
-  return <canvas ref={canvasRef} className={className + " h-full w-full"} />;
+  return <canvas ref={canvasRef} className={`${className} h-full w-full`} />;
 }

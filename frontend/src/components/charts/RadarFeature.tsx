@@ -19,7 +19,33 @@ export function RadarFeatures({
   const data = clean.slice(0, 6); // show up to 6
   const clampZ = (z: number) => Math.max(-6, Math.min(6, z)); // tame outliers
 
-  // If we don't have enough points to make a polygon, show a placeholder card
+  const R = 70,
+    cx = 90,
+    cy = 90;
+
+  // Always call the hook
+  const { pts, pathD } = useMemo(() => {
+    if (data.length < 3) {
+      return { pts: [] as { x: number; y: number }[], pathD: "" };
+    }
+    const maxA = Math.max(1e-6, ...data.map((d) => Math.abs(clampZ(d.z))));
+    const ptsLocal = data.map((d, i) => {
+      const a = (i / data.length) * 2 * Math.PI - Math.PI / 2; // start at top
+      const r = (Math.abs(clampZ(d.z)) / maxA) * R;
+      const dir = clampZ(d.z) >= 0 ? 1 : -1; // direction by sign (optional)
+      const x = cx + r * Math.cos(a) * dir;
+      const y = cy + r * Math.sin(a);
+      return { x, y };
+    });
+    const dStr =
+      ptsLocal
+        .map(
+          (p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`
+        )
+        .join(" ") + " Z";
+    return { pts: ptsLocal, pathD: dStr };
+  }, [data]);
+
   if (data.length < 3) {
     return (
       <div>
@@ -32,34 +58,6 @@ export function RadarFeatures({
       </div>
     );
   }
-
-  const R = 70,
-    cx = 90,
-    cy = 90;
-  const maxA = Math.max(1e-6, ...data.map((d) => Math.abs(clampZ(d.z))));
-
-  const pts = useMemo(() => {
-    return data.map((d, i) => {
-      const a = (i / data.length) * 2 * Math.PI - Math.PI / 2; // start at top
-      const r = (Math.abs(clampZ(d.z)) / maxA) * R;
-      // Put sign into “direction” for contrast (optional)
-      const dir = clampZ(d.z) >= 0 ? 1 : -1;
-      const x = cx + r * Math.cos(a) * dir;
-      const y = cy + r * Math.sin(a);
-      return { x, y };
-    });
-  }, [data, maxA]);
-
-  // Build a valid path only when we actually have points
-  const pathD =
-    pts.length >= 3
-      ? pts
-          .map(
-            (p, i) =>
-              `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`
-          )
-          .join(" ") + " Z"
-      : "";
 
   return (
     <div>
@@ -97,7 +95,7 @@ export function RadarFeatures({
               />
             );
           })}
-          {/* polygon (only if valid) */}
+          {/* polygon */}
           {pathD && (
             <path
               d={pathD}

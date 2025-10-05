@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 // safe number
-const f = (v: any) => {
+const f = (v: unknown): number => {
   const n = Number(v);
   return Number.isFinite(n) ? n : NaN;
 };
@@ -50,25 +50,45 @@ function to39Features(row: Record<string, string>) {
 
   // --- engineered (9)
   const quarters = (row.koi_quarters ?? "").trim();
-  const n_quarters = quarters ? quarters.match(/1/g)?.length ?? 0 : NaN;
+  const n_quarters = quarters ? quarters.match(/1/g)?.length ?? 0 : 0;
 
-  const duty_cycle = period && dur_hr ? dur_hr / 24 / period : NaN;
-  const log_period = period > 0 ? Math.log10(period) : NaN;
-  const log_duration = dur_hr > 0 ? Math.log10(dur_hr) : NaN;
+  const duty_cycle =
+    Number.isFinite(period) && period > 0 && Number.isFinite(dur_hr)
+      ? dur_hr / (24 * period)
+      : 0;
+
+  const log_period =
+    Number.isFinite(period) && period > 0 ? Math.log10(period) : 0;
+  const log_duration =
+    Number.isFinite(dur_hr) && dur_hr > 0 ? Math.log10(dur_hr) : 0;
 
   const period_err_rel =
-    Number.isFinite(period) && period !== 0
+    Number.isFinite(period) &&
+    period !== 0 &&
+    Number.isFinite(period_e1) &&
+    Number.isFinite(period_e2)
       ? (Math.abs(period_e1) + Math.abs(period_e2)) / (2 * period)
-      : NaN;
+      : 0;
 
   const duration_err_rel =
-    Number.isFinite(dur_hr) && dur_hr !== 0
+    Number.isFinite(dur_hr) &&
+    dur_hr !== 0 &&
+    Number.isFinite(dur_e1) &&
+    Number.isFinite(dur_e2)
       ? (Math.abs(dur_e1) + Math.abs(dur_e2)) / (2 * dur_hr)
-      : NaN;
+      : 0;
 
-  const err_asym_period = Math.abs(period_e1) - Math.abs(period_e2);
-  const err_asym_duration = Math.abs(dur_e1) - Math.abs(dur_e2);
-  const epoch_err_span = Math.abs(epoch_e1) + Math.abs(epoch_e2);
+  const err_asym_period =
+    (Number.isFinite(period_e1) ? Math.abs(period_e1) : 0) -
+    (Number.isFinite(period_e2) ? Math.abs(period_e2) : 0);
+
+  const err_asym_duration =
+    (Number.isFinite(dur_e1) ? Math.abs(dur_e1) : 0) -
+    (Number.isFinite(dur_e2) ? Math.abs(dur_e2) : 0);
+
+  const epoch_err_span =
+    (Number.isFinite(epoch_e1) ? Math.abs(epoch_e1) : 0) +
+    (Number.isFinite(epoch_e2) ? Math.abs(epoch_e2) : 0);
 
   // Keep a single, explicit order (39 total)
   const order = [
@@ -174,30 +194,39 @@ function standardize(vec: number[], mean: number[], std: number[]) {
   });
 }
 
+// Feature indices (avoid off-by-one)
+const IDX = {
+  depth_ppm: 6,
+  dur_hr: 9,
+  impact: 12,
+  log_period: 31, // <-- correct index
+} as const;
+
 // Tiny scoring stub — replace with your real model inference
 function score(z: number[]) {
-  const depth = z[6] ?? 0; // depth_ppm (standardized)
-  const logP = z[33] ?? 0; // log_period
-  const dur = z[9] ?? 0; // dur_hr
-  const imp = z[12] ?? 0; // impact
+  const depth = z[IDX.depth_ppm] ?? 0; // depth_ppm (standardized)
+  const logP = z[IDX.log_period] ?? 0; // log_period (standardized)
+  const dur = z[IDX.dur_hr] ?? 0; // dur_hr (standardized)
+  const imp = z[IDX.impact] ?? 0; // impact (standardized)
   const lin = 0.8 * depth + 0.2 * logP + 0.15 * dur - 0.3 * Math.abs(imp);
   const proba = 1 / (1 + Math.exp(-lin));
-  const label = proba >= 0.7 ? 1 : 0;
+  const label: 0 | 1 = proba >= 0.7 ? 1 : 0;
   return { predicted_label: label, predicted_proba: proba };
 }
 
 export async function POST(req: Request) {
   try {
-    const { row } = await req.json();
-    if (!row)
+    const body = await req.json();
+    const row = (body?.row ?? null) as Record<string, string> | null;
+    if (!row) {
       return NextResponse.json({ error: "Missing row" }, { status: 400 });
+    }
 
     const { features, order } = to39Features(row);
     const vec = order.map((k) => features[k]);
     const z = standardize(vec, MEAN, STD);
 
     const { predicted_label, predicted_proba } = score(z);
-    // after you have: const { predicted_label, predicted_proba } = score(z);
 
     // helpers
     const clamp = (x: number, a = 1e-9, b = 1 - 1e-9) =>
@@ -213,7 +242,6 @@ export async function POST(req: Request) {
         ? "yellow"
         : "red";
 
-    // build top_features from the standardized 39-vector
     const debug = Object.fromEntries(order.map((k, i) => [k, z[i]]));
     const top_features = Object.entries(debug)
       .map(([name, v]) => ({ name, z: Number(v), a: Math.abs(Number(v)) }))
@@ -234,10 +262,8 @@ export async function POST(req: Request) {
         top_features,
       },
     });
-  } catch (e: any) {
-    return NextResponse.json(
-      { error: e?.message ?? "Server error" },
-      { status: 500 }
-    );
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Server error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
