@@ -1,331 +1,73 @@
+// app/dashboard/page.tsx
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { ExoDotsCanvas } from "@/components/ExoDotsCanvas";
-import { motion } from "framer-motion";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  CartesianGrid,
-} from "recharts";
-import Link from "next/link";
 
-type Row = { time: number; flux: number; flux_err?: number };
-type Features = {
-  // stats
-  flux_mean: number;
-  flux_std: number;
-  flux_median: number;
-  flux_mad: number;
-  flux_skew: number;
-  flux_kurtosis: number;
-  flux_range: number;
-  flux_iqr: number;
-  flux_rms: number;
-  // period-ish
-  best_period: number;
-  bls_power: number;
-  period_error: number;
-  // data quality
-  n_points: number;
-  time_span: number;
-  cadence_median: number;
-  cadence_std: number;
-  // transit
-  transit_depth: number;
-  transit_significance: number;
-};
-type Output = { predicted_label: 0 | 1; predicted_proba: number };
+import { GlowCard } from "@/components/ui/GlowCard";
+import { ProbabilityOrb } from "@/components/charts/ProbabilityOrb";
+import { ColumnHistogram } from "@/components/charts/ColumnHistogram";
+import { ScatterPlot } from "@/components/charts/ScatterPlot";
+import { RadarFeatures } from "@/components/charts/RadarFeature";
 
-const median = (a: number[]) => {
-  const s = [...a].sort((x, y) => x - y);
-  const m = Math.floor(s.length / 2);
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-};
-const mean = (a: number[]) => a.reduce((s, v) => s + v, 0) / a.length;
-const std = (a: number[]) => {
-  const m = mean(a);
-  return Math.sqrt(mean(a.map((v) => (v - m) ** 2)));
-};
-const mad = (a: number[]) => median(a.map((v) => Math.abs(v - median(a))));
-const iqr = (a: number[]) => {
-  const s = [...a].sort((x, y) => x - y);
-  const q1 = s[Math.floor(0.25 * (s.length - 1))];
-  const q3 = s[Math.floor(0.75 * (s.length - 1))];
-  return q3 - q1;
-};
-const skew = (a: number[]) => {
-  const m = mean(a),
-    sd = std(a) || 1;
-  return mean(a.map((v) => ((v - m) / sd) ** 3));
-};
-const kurtosis = (a: number[]) => {
-  const m = mean(a),
-    sd = std(a) || 1;
-  return mean(a.map((v) => ((v - m) / sd) ** 4));
-};
-const clamp = (x: number, min: number, max: number) =>
-  Math.max(min, Math.min(max, x));
+import { FeatureBars } from "@/components/FeaturesBar";
+import { RunHistory, addRunToHistory } from "@/components/RunHistory";
+import { AnalysisSkeleton } from "@/components/AnalysisSkeleton";
 
-function parseCSV(text: string): Row[] {
+type ModelOutput = { predicted_label: 0 | 1; predicted_proba: number };
+
+// --- utilities ---
+function parseCSV(text: string) {
   const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
-  const tIdx = headers.indexOf("time");
-  const fIdx = headers.indexOf("flux");
-  const eIdx = headers.indexOf("flux_err");
-  if (tIdx < 0 || fIdx < 0)
-    throw new Error("CSV must include headers: time, flux[, flux_err]");
-  const rows: Row[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(",");
-    const time = parseFloat(cols[tIdx]);
-    const flux = parseFloat(cols[fIdx]);
-    const flux_err = eIdx >= 0 ? parseFloat(cols[eIdx]) : undefined;
-    if (!Number.isFinite(time) || !Number.isFinite(flux)) continue;
-    rows.push({ time, flux, flux_err });
-  }
-  return rows;
-}
-
-/* ============================
-   Detrend (simple rolling median)
-============================= */
-function rollingMedianDetrend(rows: Row[], win = 51): Row[] {
-  if (rows.length === 0) return [];
-  const y = rows.map((r) => r.flux);
-  const half = Math.max(1, Math.floor(win / 2));
-  const trend: number[] = y.map((_, i) => {
-    const s = Math.max(0, i - half),
-      e = Math.min(y.length - 1, i + half);
-    return median(y.slice(s, e + 1));
+  const headers = lines[0].split(",").map((h) => h.trim());
+  const rows = lines.slice(1).map((line) => {
+    const cols = line.split(",");
+    const obj: Record<string, string> = {};
+    headers.forEach((h, i) => (obj[h] = (cols[i] ?? "").trim()));
+    return obj;
   });
-  return rows.map((r, i) => ({
-    ...r,
-    flux_detrended: r.flux / (trend[i] || 1),
-  }));
+  return { headers, rows };
 }
 
-function estimatePeriodViaACF(rows: Row[]): {
-  best_period: number;
-  power: number;
-  width: number;
-} {
-  if (rows.length < 50) return { best_period: NaN, power: 0, width: 0 };
-  const times = rows.map((r) => r.time);
-  const y = rows.map((r) => r.flux);
-  const dt = median(times.slice(1).map((t, i) => t - times[i]));
-  const N = Math.min(5000, y.length);
-  const y0 = y.slice(0, N);
-  const m = mean(y0);
-  const sd = std(y0) || 1;
-  const norm = y0.map((v) => (v - m) / sd);
-  const maxLag = Math.min(Math.floor(N / 3), 2000);
-  let bestLag = 0,
-    best = -Infinity,
-    bestW = 0;
-  for (let lag = 5; lag < maxLag; lag++) {
-    let s = 0;
-    let c = 0;
-    for (let i = lag; i < norm.length; i++) {
-      s += norm[i] * norm[i - lag];
-      c++;
-    }
-    const corr = s / (c || 1);
-    if (corr > best) {
-      best = corr;
-      bestLag = lag;
-      bestW = 5;
-    }
-  }
-  const period = bestLag * dt;
-  const power = clamp((best + 1) / 2, 0, 1); // normalize -inf..inf -> 0..1-ish
-  const width = bestW * dt * 0.1;
-  return { best_period: period, power, width };
-}
+const REQ_TABULAR_MIN = [
+  "kepid",
+  "koi_period",
+  "koi_depth",
+  "koi_duration",
+  "koi_steff",
+  "koi_srad",
+  "koi_smass",
+  "koi_slogg",
+  "koi_smet",
+  "koi_impact",
+] as const;
+const REQ_MULTIMODAL = [
+  "kepid",
+  "koi_period",
+  "koi_depth",
+  "koi_duration",
+  "koi_steff",
+  "koi_srad",
+  "koi_smass",
+  "koi_slogg",
+  "koi_smet",
+  "koi_impact",
+  "residual_windows_file",
+  "pixel_diffs_file",
+] as const;
 
-/* ============================
-   Features (18)
-============================= */
-function computeFeatures(rows: Row[]): Features {
-  const t = rows.map((r) => r.time);
-  const y = rows.map((r) => r.flux);
-  const yMed = median(y);
-  const yCentered = y.map((v) => v - yMed);
+type Tab = "Tabular (39)" | "Multimodal";
 
-  // Stats
-  const flux_mean = mean(y);
-  const flux_std = std(y);
-  const flux_median = yMed;
-  const flux_mad = mad(y);
-  const flux_skew = skew(y);
-  const flux_kurtosis = kurtosis(y);
-  const flux_range = Math.max(...y) - Math.min(...y);
-  const flux_iqr = iqr(y);
-  const flux_rms = Math.sqrt(mean(yCentered.map((v) => v * v)));
-
-  // Data quality
-  const n_points = rows.length;
-  const time_span = Math.max(...t) - Math.min(...t);
-  const cadences = t.slice(1).map((ti, i) => ti - t[i]);
-  const cadence_median = cadences.length ? median(cadences) : 0;
-  const cadence_std = cadences.length ? std(cadences) : 0;
-
-  // Transit-ish
-  const depth = yMed - median(y.filter((v) => v < yMed)); // crude
-  const transit_depth = depth;
-  const transit_significance = flux_mad > 0 ? depth / flux_mad : 0;
-
-  // Period proxy
-  const { best_period, power: bls_power, width } = estimatePeriodViaACF(rows);
-  const period_error = width || cadence_median * 2;
-
-  return {
-    flux_mean,
-    flux_std,
-    flux_median,
-    flux_mad,
-    flux_skew,
-    flux_kurtosis,
-    flux_range,
-    flux_iqr,
-    flux_rms,
-    best_period,
-    bls_power,
-    period_error,
-    n_points,
-    time_span,
-    cadence_median,
-    cadence_std,
-    transit_depth,
-    transit_significance,
-  };
-}
-
-/* ============================
-   Heuristic fallback "model"
-============================= */
-function fallbackPredict(f: Features): Output {
-  const z1 = clamp(f.transit_significance / 10, 0, 2); // ~0..2
-  const z2 = clamp(f.bls_power, 0, 1); // 0..1
-  const z = 0.9 * z1 + 0.8 * z2 - 0.6;
-  const proba = 1 / (1 + Math.exp(-3 * z)); // sigmoid
-  return { predicted_label: proba >= 0.7 ? 1 : 0, predicted_proba: proba };
-}
-
-/* ============================
-   Radial confidence
-============================= */
-function Radial({ p }: { p: number }) {
-  const pct = clamp(p, 0, 1);
-  const R = 38,
-    C = 2 * Math.PI * R,
-    off = C * (1 - pct);
-  const band = pct < 0.3 ? "red" : pct < 0.7 ? "yellow" : "emerald";
-  return (
-    <div className="relative w-24 h-24">
-      <svg viewBox="0 0 100 100" className="w-24 h-24">
-        <circle
-          cx="50"
-          cy="50"
-          r={R}
-          className="fill-none stroke-[10] stroke-white/10"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r={R}
-          className={`fill-none stroke-[10] -rotate-90 origin-center stroke-${band}-400`}
-          strokeDasharray={C}
-          strokeDashoffset={off}
-        />
-      </svg>
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="text-center">
-          <div className="text-lg font-semibold">{Math.round(pct * 100)}%</div>
-          <div className="text-[10px] uppercase tracking-wide text-white/60">
-            confidence
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ============================
-   Main page
-============================= */
-export default function DashboardPage() {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [detrendOn, setDetrendOn] = useState(true);
-  const [sigma, setSigma] = useState(4);
-  const [features, setFeatures] = useState<Features | null>(null);
-  const [output, setOutput] = useState<Output | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const det = useMemo(
-    () => (detrendOn ? rollingMedianDetrend(rows) : []),
-    [rows, detrendOn]
-  );
-
-  const onFile = async (file: File) => {
-    setError(null);
-    try {
-      const text = await file.text();
-      const parsed = parseCSV(text);
-      if (!parsed.length) throw new Error("No valid rows parsed.");
-      // (optional) sigma-clip
-      const med = median(parsed.map((r) => r.flux));
-      const m = mad(parsed.map((r) => r.flux)) || 1e-9;
-      const lo = med - sigma * m * 1.4826,
-        hi = med + sigma * m * 1.4826;
-      const clipped = parsed.filter((r) => r.flux >= lo && r.flux <= hi);
-      setRows(clipped);
-      setFeatures(null);
-      setOutput(null);
-    } catch (e: any) {
-      setError(e?.message || "Failed to parse CSV.");
-    }
-  };
-
-  // post route after fastapi(todo)
-  const analyze = async () => {
-    if (!rows.length) return;
-    const f = computeFeatures(rows);
-    setFeatures(f);
-    try {
-      const res = await fetch("/api/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ features: f }),
-      });
-      if (!res.ok) throw new Error("stub");
-      const data = (await res.json()) as Output;
-      setOutput(data);
-    } catch {
-      setOutput(fallbackPredict(f));
-    }
-  };
-
-  const verdict = output
-    ? output.predicted_proba < 0.3
-      ? "Very likely non-planet"
-      : output.predicted_proba < 0.7
-      ? "Uncertain (needs follow-up)"
-      : "Very likely planet"
-    : "—";
+export default function Dashboard() {
+  const [tab, setTab] = useState<Tab>("Tabular (39)");
 
   return (
     <main className="relative min-h-screen bg-black text-white overflow-hidden">
       <Header />
-      <div className="fixed inset-0 z-0 opacity-35 pointer-events-none">
+      <div className="fixed inset-0 z-0 opacity-30 pointer-events-none">
         <ExoDotsCanvas />
       </div>
 
@@ -337,290 +79,537 @@ export default function DashboardPage() {
           className="mb-8 flex items-center justify-between gap-4"
         >
           <h1 className="text-2xl md:text-4xl font-semibold tracking-tight">
-            lol
+            Exoplanet Inference Lab
           </h1>
           <Link href="/" className="text-white/60 hover:text-white text-sm">
             ← back
           </Link>
         </motion.div>
 
-        {/* Step 1: Upload */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05, duration: 0.6 }}
-          className="grid md:grid-cols-3 gap-6"
-        >
-          <div className="md:col-span-2 rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur p-6">
-            <div className="mb-3 text-sm font-medium text-white/70">
-              1) Upload light curve (CSV)
-            </div>
-
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                const f = e.dataTransfer.files?.[0];
-                if (f) onFile(f);
-              }}
-              className="border border-dashed border-white/20 rounded-2xl p-8 text-center hover:border-white/40 transition"
+        <div className="inline-flex rounded-2xl border border-white/10 bg-white/[0.03] p-1">
+          {(["Tabular (39)", "Multimodal"] as Tab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-2 rounded-xl text-sm transition ${
+                tab === t
+                  ? "bg-white text-black"
+                  : "text-white/70 hover:text-white"
+              }`}
             >
-              <p className="text-white/70">
-                Drag & drop a CSV with{" "}
-                <code className="text-white">time, flux[, flux_err]</code>
-              </p>
-              <div className="mt-4">
-                <label className="inline-block px-4 py-2 rounded-xl bg-white text-black font-medium cursor-pointer hover:opacity-90">
-                  <input
-                    type="file"
-                    accept=".csv"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) onFile(f);
-                    }}
-                  />
-                  Choose file
-                </label>
-              </div>
-              {error && <p className="mt-3 text-red-300 text-sm">{error}</p>}
-            </div>
+              {t}
+            </button>
+          ))}
+        </div>
 
-            {rows.length > 0 && (
-              <div className="mt-5 text-xs text-white/70">
-                Loaded <b>{rows.length}</b> points • First 5 rows:
-                <div className="mt-2 overflow-x-auto rounded-xl border border-white/10">
-                  <table className="w-full text-left whitespace-nowrap">
-                    <thead className="bg-white/5">
-                      <tr>
-                        <th className="px-3 py-2">time</th>
-                        <th className="px-3 py-2">flux</th>
-                        <th className="px-3 py-2">flux_err</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.slice(0, 5).map((r, i) => (
-                        <tr key={i} className="border-t border-white/5">
-                          <td className="px-3 py-2">{r.time}</td>
-                          <td className="px-3 py-2">{r.flux}</td>
-                          <td className="px-3 py-2">{r.flux_err ?? ""}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* KPIs */}
-        {rows.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.6 }}
-            className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4"
-          >
-            <KPI label="Points" value={rows.length.toLocaleString()} />
-            <KPI
-              label="Span (d)"
-              value={fmtNum(
-                Math.max(...rows.map((r) => r.time)) -
-                  Math.min(...rows.map((r) => r.time))
-              )}
-            />
-            <KPI
-              label="Median cadence (d)"
-              value={fmtNum(
-                median(rows.slice(1).map((r, i) => r.time - rows[i].time)) || 0
-              )}
-            />
-            <KPI
-              label="RMS"
-              value={fmtNum(
-                Math.sqrt(
-                  mean(
-                    rows
-                      .map((r) => r.flux)
-                      .map((v) => (v - median(rows.map((r) => r.flux))) ** 2)
-                  )
-                )
-              )}
-            />
-          </motion.div>
-        )}
-
-        {/* Charts */}
-        {rows.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6 }}
-            className="mt-8 grid lg:grid-cols-2 gap-6"
-          >
-            <Card title="Raw light curve">
-              <ChartLC
-                data={rows.map((r) => ({ time: r.time, flux: r.flux }))}
-              />
-            </Card>
-            <Card
-              title={detrendOn ? "Detrended (flux/trend)" : "Detrended (off)"}
-            >
-              <ChartDetrended
-                data={(det.length ? det : rows).map((r: any) => ({
-                  time: r.time,
-                  flux: r.flux_detrended ?? r.flux,
-                }))}
-              />
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Output & Features */}
-        {(features || output) && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6 }}
-            className="mt-8 grid md:grid-cols-5 gap-6"
-          >
-            <Card className="md:col-span-2" title="Model output">
-              {output ? (
-                <div className="flex items-center gap-5">
-                  <Radial p={output.predicted_proba} />
-                  <div>
-                    <div className="text-sm uppercase tracking-wide text-white/60">
-                      classification
-                    </div>
-                    <div className="mt-1 text-2xl font-semibold">
-                      {output.predicted_label === 1 ? "Planet" : "Non-planet"}
-                    </div>
-                    <div className="mt-1 text-sm text-white/70">{verdict}</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-white/60 text-sm">
-                  Run “Analyze” to see predictions.
-                </div>
-              )}
-            </Card>
-
-            <Card className="md:col-span-3" title="Features (18)">
-              {features ? (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                  {Object.entries(features).map(([k, v]) => (
-                    <div
-                      key={k}
-                      className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"
-                    >
-                      <div className="text-white/50 text-[11px] uppercase tracking-wide">
-                        {k}
-                      </div>
-                      <div className="mt-1 font-semibold">{fmtNum(v)}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-white/60 text-sm">
-                  Features will appear after analysis.
-                </div>
-              )}
-            </Card>
-          </motion.div>
-        )}
+        <div className="mt-8">
+          {tab === "Tabular (39)" ? <TabularPanel /> : <MultimodalPanel />}
+        </div>
       </section>
     </main>
   );
 }
 
-/* ========== Small subcomponents ========== */
-function KPI({ label, value }: { label: string; value: string | number }) {
+/* -------------------------- Tabular (39) -------------------------- */
+function TabularPanel() {
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [rows, setRows] = useState<Record<string, string>[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [output, setOutput] = useState<ModelOutput | null>(null);
+  const [featuresEcho, setFeaturesEcho] = useState<Record<
+    string,
+    number
+  > | null>(null);
+  const [extras, setExtras] = useState<any | null>(null);
+
+  const haveMin = useMemo(
+    () => REQ_TABULAR_MIN.every((k) => headers.includes(k)),
+    [headers]
+  );
+
+  const onFile = async (file: File) => {
+    setError(null);
+    setOutput(null);
+    setFeaturesEcho(null);
+    setExtras(null);
+    setSelected(null);
+    const text = await file.text();
+    const { headers: h, rows: r } = parseCSV(text);
+    setHeaders(h);
+    setRows(r);
+    if (!REQ_TABULAR_MIN.every((k) => h.includes(k))) {
+      setError(`Missing required columns: ${REQ_TABULAR_MIN.join(", ")}`);
+    }
+  };
+
+  const analyze = async () => {
+    if (selected == null) return;
+    setAnalyzing(true);
+    const row = rows[selected];
+    try {
+      const res = await fetch("/api/predict/tabular", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ row }),
+      });
+      if (!res.ok) throw new Error("prediction failed");
+      const data = await res.json();
+      console.log(
+        "pred:",
+        data.predicted_proba,
+        "top_features:",
+        data.extras?.top_features
+      );
+      console.log(
+        "debug_features keys:",
+        Object.keys(data.debug_features || {})
+      );
+
+      setOutput({
+        predicted_label: data.predicted_label,
+        predicted_proba: data.predicted_proba,
+      });
+      setFeaturesEcho(data.debug_features ?? null);
+      setExtras(data.extras ?? null);
+
+      const id = row.kepid || row.KepID || `row-${selected + 1}`;
+      addRunToHistory({
+        id: String(id),
+        label: data.predicted_label === 1 ? "Planet" : "Non-planet",
+        proba: Number(data.predicted_proba ?? 0),
+        ts: Date.now(),
+      });
+    } catch (e: any) {
+      setError(e?.message || "Prediction error.");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
-      <div className="text-xs text-white/60 uppercase tracking-wide">
-        {label}
+    <div className="grid lg:grid-cols-3 gap-6">
+      {/* LEFT: Upload + dataset charts + table */}
+      <div className="lg:col-span-2 space-y-6">
+        <GlowCard>
+          <div className="mb-3 text-sm font-medium text-white/70">
+            Upload KOI/Kepler CSV (Tabular)
+          </div>
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const f = e.dataTransfer.files?.[0];
+              if (f) onFile(f);
+            }}
+            className="border border-dashed border-white/20 rounded-2xl p-8 text-center hover:border-white/40 transition"
+          >
+            <p className="text-white/70">
+              Drag & drop a CSV (Template 1 or 2).
+            </p>
+            <div className="mt-4">
+              <label className="inline-block px-4 py-2 rounded-xl bg-white text-black font-medium cursor-pointer hover:opacity-90">
+                <input
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) onFile(f);
+                  }}
+                />
+                Choose file
+              </label>
+            </div>
+            {error && <p className="mt-3 text-red-300 text-sm">{error}</p>}
+          </div>
+        </GlowCard>
+
+        {/* dataset graphs */}
+        {rows.length > 0 && (
+          <div className="grid md:grid-cols-3 gap-6">
+            <GlowCard>
+              <ColumnHistogram
+                rows={rows}
+                col="koi_period"
+                title="period"
+                unit=" d"
+              />
+            </GlowCard>
+            <GlowCard>
+              <ColumnHistogram
+                rows={rows}
+                col="koi_depth"
+                title="depth"
+                unit=" ppm"
+              />
+            </GlowCard>
+            <GlowCard>
+              <ColumnHistogram
+                rows={rows}
+                col="koi_duration"
+                title="duration"
+                unit=" hr"
+              />
+            </GlowCard>
+            <GlowCard className="md:col-span-3">
+              <ScatterPlot
+                rows={rows}
+                xKey="koi_period"
+                yKey="koi_duration"
+                selected={selected}
+                title="period vs duration"
+                unitX="d"
+                unitY="hr"
+              />
+            </GlowCard>
+          </div>
+        )}
+
+        {/* preview table */}
+        {rows.length > 0 && (
+          <GlowCard>
+            <div className="text-xs text-white/70 mb-2">
+              Detected columns: {headers.length} • Rows: {rows.length} •{" "}
+              <span className={haveMin ? "text-emerald-300" : "text-red-300"}>
+                {haveMin ? "Ready" : "Missing required"}
+              </span>
+            </div>
+            <div className="overflow-x-auto rounded-xl border border-white/10">
+              <table className="w-full text-left whitespace-nowrap text-sm">
+                <thead className="bg-white/5">
+                  <tr>
+                    {headers.slice(0, 8).map((h) => (
+                      <th key={h} className="px-3 py-2">
+                        {h}
+                      </th>
+                    ))}
+                    <th className="px-3 py-2">…</th>
+                    <th className="px-3 py-2">select</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.slice(0, 10).map((r, i) => (
+                    <tr key={i} className="border-t border-white/5">
+                      {headers.slice(0, 8).map((h) => (
+                        <td key={h} className="px-3 py-2">
+                          {r[h]}
+                        </td>
+                      ))}
+                      <td className="px-3 py-2">…</td>
+                      <td className="px-3 py-2">
+                        <button
+                          onClick={() => setSelected(i)}
+                          className={`px-3 py-1 rounded-xl text-xs ${
+                            selected === i
+                              ? "bg-white text-black"
+                              : "border border-white/20 hover:bg-white/10"
+                          }`}
+                        >
+                          {selected === i ? "Selected" : "Choose"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {rows.length > 10 && (
+                <div className="px-3 py-2 text-xs text-white/50">
+                  showing first 10…
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={analyze}
+              disabled={selected == null || !haveMin || analyzing}
+              className="mt-6 px-5 py-3 rounded-2xl bg-white text-black font-medium hover:opacity-90 disabled:opacity-40 transition"
+            >
+              {analyzing ? "Analyzing…" : "Analyze (tabular-only)"}
+            </button>
+          </GlowCard>
+        )}
       </div>
-      <div className="mt-1 text-3xl font-semibold">{value}</div>
+
+      {/* RIGHT: Prediction visuals */}
+      <GlowCard>
+        <div className="mb-4 text-sm font-medium text-white/70">Prediction</div>
+        {analyzing ? (
+          <AnalysisSkeleton />
+        ) : output ? (
+          <div className="space-y-6">
+            <ProbabilityOrb p={output.predicted_proba} />
+            <RadarFeatures
+              items={(extras?.top_features ?? []).filter((d: any) =>
+                Number.isFinite(d?.z)
+              )}
+            />
+            <FeatureBars
+              zvec={
+                (featuresEcho as any) ??
+                Object.fromEntries(
+                  (extras?.top_features ?? []).map((d: any) => [d.name, d.z])
+                )
+              }
+            />
+            <RunHistory />
+          </div>
+        ) : (
+          <p className="text-white/60 text-sm">
+            Upload a CSV, select a row, then run Analyze.
+          </p>
+        )}
+      </GlowCard>
     </div>
   );
 }
 
-function Card({
-  title,
-  className,
-  children,
-}: {
-  title: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={`rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur p-5 md:p-7 ${
-        className || ""
-      }`}
-    >
-      <div className="mb-3 text-sm font-medium text-white/70">{title}</div>
-      {children}
-    </div>
-  );
-}
+/* -------------------------- Multimodal -------------------------- */
+function MultimodalPanel() {
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [rows, setRows] = useState<Record<string, string>[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [residualFile, setResidualFile] = useState<File | null>(null);
+  const [pixelFile, setPixelFile] = useState<File | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [output, setOutput] = useState<ModelOutput | null>(null);
+  const [extras, setExtras] = useState<any | null>(null);
+  const [featuresEcho, setFeaturesEcho] = useState<Record<
+    string,
+    number
+  > | null>(null);
 
-function ChartLC({ data }: { data: { time: number; flux: number }[] }) {
+  const valid = useMemo(
+    () => REQ_MULTIMODAL.every((k) => headers.includes(k)),
+    [headers]
+  );
+
+  const onFile = async (file: File) => {
+    setError(null);
+    setOutput(null);
+    setExtras(null);
+    setFeaturesEcho(null);
+    setSelected(null);
+    const text = await file.text();
+    const { headers: h, rows: r } = parseCSV(text);
+    setHeaders(h);
+    setRows(r);
+    if (!REQ_MULTIMODAL.every((k) => h.includes(k))) {
+      setError(`Missing required columns: ${REQ_MULTIMODAL.join(", ")}`);
+    }
+  };
+
+  const analyze = async () => {
+    if (selected == null) return;
+    if (!residualFile || !pixelFile) {
+      setError("Attach both .npy files (residual_windows & pixel_diffs).");
+      return;
+    }
+    setAnalyzing(true);
+    const row = rows[selected];
+    const fd = new FormData();
+    fd.append("row", JSON.stringify(row));
+    fd.append("residual_windows", residualFile);
+    fd.append("pixel_diffs", pixelFile);
+
+    try {
+      const res = await fetch("/api/predict/multimodal", {
+        method: "POST",
+        body: fd,
+      });
+      if (!res.ok) throw new Error("prediction failed");
+      const data = await res.json();
+      setOutput({
+        predicted_label: data.predicted_label,
+        predicted_proba: data.predicted_proba,
+      });
+      setExtras(data.extras ?? null);
+      setFeaturesEcho(data.debug_features ?? null);
+    } catch (e: any) {
+      setError(e?.message || "Prediction error.");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   return (
-    <div className="h-64 md:h-72">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
-          <CartesianGrid stroke="rgba(255,255,255,0.06)" />
-          <XAxis dataKey="time" stroke="#aaa" />
-          <YAxis stroke="#aaa" />
-          <Tooltip
-            contentStyle={{
-              background: "rgba(0,0,0,0.8)",
-              border: "1px solid rgba(255,255,255,0.1)",
+    <div className="grid lg:grid-cols-3 gap-6">
+      {/* LEFT: Upload + table */}
+      <div className="lg:col-span-2 space-y-6">
+        <GlowCard>
+          <div className="mb-3 text-sm font-medium text-white/70">
+            Upload Multimodal CSV + .npy
+          </div>
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const f = e.dataTransfer.files?.[0];
+              if (f) onFile(f);
             }}
-          />
-          <Line
-            type="monotone"
-            dataKey="flux"
-            dot={false}
-            stroke="#fff"
-            strokeWidth={1.2}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-function ChartDetrended({ data }: { data: { time: number; flux: number }[] }) {
-  return (
-    <div className="h-64 md:h-72">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data}>
-          <CartesianGrid stroke="rgba(255,255,255,0.06)" />
-          <XAxis dataKey="time" stroke="#aaa" />
-          <YAxis stroke="#aaa" />
-          <Tooltip
-            contentStyle={{
-              background: "rgba(0,0,0,0.8)",
-              border: "1px solid rgba(255,255,255,0.1)",
-            }}
-          />
-          <Area dataKey="flux" stroke="#fff" fill="rgba(255,255,255,0.12)" />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
+            className="border border-dashed border-white/20 rounded-2xl p-8 text-center hover:border-white/40 transition"
+          >
+            <p className="text-white/70">
+              CSV must include{" "}
+              <code className="text-white">
+                residual_windows_file,pixel_diffs_file
+              </code>
+            </p>
+            <div className="mt-4">
+              <label className="inline-block px-4 py-2 rounded-xl bg-white text-black font-medium cursor-pointer hover:opacity-90">
+                <input
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) onFile(f);
+                  }}
+                />
+                Choose file
+              </label>
+            </div>
+            {error && <p className="mt-3 text-red-300 text-sm">{error}</p>}
+          </div>
+        </GlowCard>
 
-function fmtNum(n: number) {
-  if (!Number.isFinite(n)) return "—";
-  if (Math.abs(n) >= 1000) return n.toFixed(0);
-  return Number.isInteger(n) ? n.toString() : n.toFixed(4);
+        {rows.length > 0 && (
+          <GlowCard>
+            <div className="text-xs text-white/70 mb-2">
+              Detected columns: {headers.length} • Rows: {rows.length} •{" "}
+              {valid ? (
+                <span className="text-emerald-300">OK</span>
+              ) : (
+                <span className="text-red-300">Missing required</span>
+              )}
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-white/10">
+              <table className="w-full text-left whitespace-nowrap text-sm">
+                <thead className="bg-white/5">
+                  <tr>
+                    {headers.slice(0, 8).map((h) => (
+                      <th key={h} className="px-3 py-2">
+                        {h}
+                      </th>
+                    ))}
+                    <th className="px-3 py-2">…</th>
+                    <th className="px-3 py-2">select</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.slice(0, 10).map((r, i) => (
+                    <tr key={i} className="border-t border-white/5">
+                      {headers.slice(0, 8).map((h) => (
+                        <td key={h} className="px-3 py-2">
+                          {r[h]}
+                        </td>
+                      ))}
+                      <td className="px-3 py-2">…</td>
+                      <td className="px-3 py-2">
+                        <button
+                          onClick={() => setSelected(i)}
+                          className={`px-3 py-1 rounded-xl text-xs ${
+                            selected === i
+                              ? "bg-white text-black"
+                              : "border border-white/20 hover:bg-white/10"
+                          }`}
+                        >
+                          {selected === i ? "Selected" : "Choose"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {rows.length > 10 && (
+                <div className="px-3 py-2 text-xs text-white/50">
+                  showing first 10…
+                </div>
+              )}
+            </div>
+
+            {/* .npy pickers */}
+            {selected != null && (
+              <div className="mt-5 grid md:grid-cols-2 gap-4">
+                <label className="block">
+                  <div className="text-sm text-white/70 mb-1">
+                    residual_windows (.npy, ~ (5,128))
+                  </div>
+                  <input
+                    type="file"
+                    accept=".npy"
+                    onChange={(e) =>
+                      setResidualFile(e.target.files?.[0] ?? null)
+                    }
+                    className="w-full text-sm file:mr-3 file:px-3 file:py-2 file:rounded-xl file:bg-white file:text-black file:cursor-pointer"
+                  />
+                </label>
+                <label className="block">
+                  <div className="text-sm text-white/70 mb-1">
+                    pixel_diffs (.npy, ~ (32,24,24))
+                  </div>
+                  <input
+                    type="file"
+                    accept=".npy"
+                    onChange={(e) => setPixelFile(e.target.files?.[0] ?? null)}
+                    className="w-full text-sm file:mr-3 file:px-3 file:py-2 file:rounded-xl file:bg-white file:text-black file:cursor-pointer"
+                  />
+                </label>
+              </div>
+            )}
+
+            <button
+              onClick={analyze}
+              disabled={selected == null || !valid || analyzing}
+              className="mt-6 px-5 py-3 rounded-2xl bg-white text-black font-medium hover:opacity-90 disabled:opacity-40 transition"
+            >
+              {analyzing ? "Analyzing…" : "Analyze (multimodal)"}
+            </button>
+          </GlowCard>
+        )}
+      </div>
+
+      {/* RIGHT: Prediction visuals */}
+      <GlowCard>
+        <div className="mb-4 text-sm font-medium text-white/70">Prediction</div>
+        {analyzing ? (
+          <AnalysisSkeleton />
+        ) : output ? (
+          <div className="space-y-6">
+            <ProbabilityOrb p={output.predicted_proba} />
+            <div className="text-xs text-white/60 uppercase tracking-wide">
+              CNN data used:{" "}
+              <span
+                className={
+                  extras?.used_cnn ? "text-emerald-300" : "text-white/70"
+                }
+              >
+                {extras?.used_cnn ? "yes" : "no"}
+              </span>
+            </div>
+            <RadarFeatures
+              items={(extras?.top_features ?? []).filter((d: any) =>
+                Number.isFinite(d?.z)
+              )}
+            />
+            <FeatureBars
+              zvec={
+                (featuresEcho as any) ??
+                Object.fromEntries(
+                  (extras?.top_features ?? []).map((d: any) => [d.name, d.z])
+                )
+              }
+            />
+          </div>
+        ) : (
+          <p className="text-white/60 text-sm">
+            Upload CSV, select a row, attach .npy files, then Analyze.
+          </p>
+        )}
+      </GlowCard>
+    </div>
+  );
 }
