@@ -205,7 +205,6 @@ frontend/temp/
 *.onnx
 *.pkl
 *.pickle
-*.joblib
 *.model
 *.weights
 
