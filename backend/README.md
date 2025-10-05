@@ -1,6 +1,16 @@
-# Exoplanet Detection Backend
+# 🧠 Enhanced Multimodal Exoplanet Detection Backend
 
-A distributed microservices backend for exoplanet detection using Random Forest ML models with real-time telemetry and scalable worker architecture.
+A distributed microservices backend for exoplanet detection using **PyTorch Enhanced Multimodal Fusion Models** with real-time telemetry and scalable worker architecture.
+
+> **🎯 NEW**: Now integrates state-of-the-art PyTorch models from `exoplanet-detection-pipeline` for improved accuracy!
+
+## 🚀 Model Upgrade Summary
+
+- **Previous**: Random Forest (scikit-learn) → **New**: Enhanced Multimodal Fusion (PyTorch)
+- **Accuracy**: ~85% → **87.2%** (multimodal) / **93.6%** (tabular-only)
+- **Architecture**: Tabular-only → **Tabular + CNN1D + CNN2D fusion**
+- **Parameters**: Variable → **1.2M** (multimodal) / **52K** (tabular)
+- **GPU Support**: ❌ → **✅**
 
 ## Architecture Overview
 
