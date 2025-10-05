@@ -43,7 +43,7 @@ export function RunHistory() {
       </div>
 
       {/* Sparkline */}
-      <div className="h-16 w-full relative mb-4">
+      <div className="h-1 w-full relative mb-4">
         <svg className="absolute inset-0 w-full h-full">
           <polyline
             fill="none"

@@ -16,6 +16,7 @@ import { RadarFeatures } from "@/components/charts/RadarFeature";
 import { FeatureBars } from "@/components/FeaturesBar";
 import { RunHistory, addRunToHistory } from "@/components/RunHistory";
 import { AnalysisSkeleton } from "@/components/AnalysisSkeleton";
+import { CustomTabularMapper } from "@/components/CustomTabularMarker";
 
 type ModelOutput = { predicted_label: 0 | 1; predicted_proba: number };
 
@@ -123,6 +124,61 @@ function TabularPanel() {
     number
   > | null>(null);
   const [extras, setExtras] = useState<any | null>(null);
+  // inside TabularPanel
+  const [useCustomMap, setUseCustomMap] = useState(false);
+
+  {
+    /* toggle */
+  }
+  <label className="inline-flex items-center gap-2 text-sm text-white/70 mt-4">
+    <input
+      type="checkbox"
+      className="accent-white"
+      checked={useCustomMap}
+      onChange={(e) => setUseCustomMap(e.target.checked)}
+    />
+    Use Custom CSV (map columns to tabular schema)
+  </label>;
+
+  {
+    useCustomMap && rows.length > 0 && (
+      <CustomTabularMapper
+        headers={headers}
+        rows={rows}
+        onPredict={async (mappedRow) => {
+          // you can add placeholder symmetric errors here if wanted
+          const row = {
+            ...mappedRow,
+            koi_period_err1: 1e-4 * Number(mappedRow.koi_period || 0),
+            koi_period_err2: -1e-4 * Number(mappedRow.koi_period || 0),
+            koi_time0bk: "",
+            koi_time0bk_err1: "",
+            koi_time0bk_err2: "",
+            koi_depth_err1: "",
+            koi_depth_err2: "",
+            koi_duration_err1: "",
+            koi_duration_err2: "",
+            koi_impact_err1: "",
+            koi_impact_err2: "",
+            koi_quarters: "",
+          };
+          const res = await fetch("/api/predict/tabular", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ row }),
+          });
+          const data = await res.json();
+          // reuse your existing setOutput / setExtras / setFeaturesEcho
+          setOutput({
+            predicted_label: data.predicted_label,
+            predicted_proba: data.predicted_proba,
+          });
+          setFeaturesEcho(data.debug_features ?? null);
+          setExtras(data.extras ?? null);
+        }}
+      />
+    );
+  }
 
   const haveMin = useMemo(
     () => REQ_TABULAR_MIN.every((k) => headers.includes(k)),
