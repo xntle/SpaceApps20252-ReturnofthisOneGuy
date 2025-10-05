@@ -17,10 +17,32 @@ import { FeatureBars } from "@/components/FeaturesBar";
 import { RunHistory, addRunToHistory } from "@/components/RunHistory";
 import { AnalysisSkeleton } from "@/components/AnalysisSkeleton";
 import { CustomTabularMapper } from "@/components/CustomTabularMarker";
+/* ---------------- Types ---------------- */
+type ZVec = Record<string, number>;
+type DecisionBand = "green" | "yellow" | "red";
+
+interface TopFeature {
+  name: string;
+  z: number;
+}
+
+interface Extras {
+  thresholds: { green: number; yellow: number };
+  logit: number;
+  entropy: number;
+  decision_band: DecisionBand;
+  used_cnn?: boolean;
+  top_features?: TopFeature[];
+}
 
 type ModelOutput = { predicted_label: 0 | 1; predicted_proba: number };
 
-// --- utilities ---
+interface PredictResponse extends ModelOutput {
+  debug_features?: ZVec;
+  extras?: Extras;
+}
+
+/* ---------------- utils ---------------- */
 function parseCSV(text: string) {
   const lines = text.trim().split(/\r?\n/);
   const headers = lines[0].split(",").map((h) => h.trim());
@@ -45,6 +67,7 @@ const REQ_TABULAR_MIN = [
   "koi_smet",
   "koi_impact",
 ] as const;
+
 const REQ_MULTIMODAL = [
   "kepid",
   "koi_period",
@@ -62,6 +85,7 @@ const REQ_MULTIMODAL = [
 
 type Tab = "Tabular (39)" | "Multimodal";
 
+/* ---------------- page ---------------- */
 export default function Dashboard() {
   const [tab, setTab] = useState<Tab>("Tabular (39)");
 
@@ -111,7 +135,7 @@ export default function Dashboard() {
   );
 }
 
-/* -------------------------- Tabular (39) -------------------------- */
+/* ---------------- Tabular (39) ---------------- */
 function TabularPanel() {
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<Record<string, string>[]>([]);
@@ -119,66 +143,9 @@ function TabularPanel() {
   const [error, setError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [output, setOutput] = useState<ModelOutput | null>(null);
-  const [featuresEcho, setFeaturesEcho] = useState<Record<
-    string,
-    number
-  > | null>(null);
-  const [extras, setExtras] = useState<any | null>(null);
-  // inside TabularPanel
+  const [featuresEcho, setFeaturesEcho] = useState<ZVec | null>(null);
+  const [extras, setExtras] = useState<Extras | null>(null);
   const [useCustomMap, setUseCustomMap] = useState(false);
-
-  {
-    /* toggle */
-  }
-  <label className="inline-flex items-center gap-2 text-sm text-white/70 mt-4">
-    <input
-      type="checkbox"
-      className="accent-white"
-      checked={useCustomMap}
-      onChange={(e) => setUseCustomMap(e.target.checked)}
-    />
-    Use Custom CSV (map columns to tabular schema)
-  </label>;
-
-  {
-    useCustomMap && rows.length > 0 && (
-      <CustomTabularMapper
-        headers={headers}
-        rows={rows}
-        onPredict={async (mappedRow) => {
-          // you can add placeholder symmetric errors here if wanted
-          const row = {
-            ...mappedRow,
-            koi_period_err1: 1e-4 * Number(mappedRow.koi_period || 0),
-            koi_period_err2: -1e-4 * Number(mappedRow.koi_period || 0),
-            koi_time0bk: "",
-            koi_time0bk_err1: "",
-            koi_time0bk_err2: "",
-            koi_depth_err1: "",
-            koi_depth_err2: "",
-            koi_duration_err1: "",
-            koi_duration_err2: "",
-            koi_impact_err1: "",
-            koi_impact_err2: "",
-            koi_quarters: "",
-          };
-          const res = await fetch("/api/predict/tabular", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ row }),
-          });
-          const data = await res.json();
-          // reuse your existing setOutput / setExtras / setFeaturesEcho
-          setOutput({
-            predicted_label: data.predicted_label,
-            predicted_proba: data.predicted_proba,
-          });
-          setFeaturesEcho(data.debug_features ?? null);
-          setExtras(data.extras ?? null);
-        }}
-      />
-    );
-  }
 
   const haveMin = useMemo(
     () => REQ_TABULAR_MIN.every((k) => headers.includes(k)),
@@ -211,17 +178,7 @@ function TabularPanel() {
         body: JSON.stringify({ row }),
       });
       if (!res.ok) throw new Error("prediction failed");
-      const data = await res.json();
-      console.log(
-        "pred:",
-        data.predicted_proba,
-        "top_features:",
-        data.extras?.top_features
-      );
-      console.log(
-        "debug_features keys:",
-        Object.keys(data.debug_features || {})
-      );
+      const data: PredictResponse = await res.json();
 
       setOutput({
         predicted_label: data.predicted_label,
@@ -230,19 +187,35 @@ function TabularPanel() {
       setFeaturesEcho(data.debug_features ?? null);
       setExtras(data.extras ?? null);
 
-      const id = row.kepid || row.KepID || `row-${selected + 1}`;
+      const id =
+        (row.kepid as string) || (row.KepID as string) || `row-${selected + 1}`;
       addRunToHistory({
         id: String(id),
         label: data.predicted_label === 1 ? "Planet" : "Non-planet",
         proba: Number(data.predicted_proba ?? 0),
         ts: Date.now(),
       });
-    } catch (e: any) {
-      setError(e?.message || "Prediction error.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Prediction error.";
+      setError(msg);
     } finally {
       setAnalyzing(false);
     }
   };
+
+  // Derived visuals (typed, no any)
+  const radarItems: TopFeature[] = (extras?.top_features ?? []).filter(
+    (t): t is TopFeature => t != null && Number.isFinite(t.z)
+  );
+
+  const zvec: ZVec | null =
+    featuresEcho ??
+    (extras?.top_features
+      ? extras.top_features.reduce<ZVec>((acc, t) => {
+          if (t && Number.isFinite(t.z)) acc[t.name] = t.z;
+          return acc;
+        }, {})
+      : null);
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
@@ -280,6 +253,55 @@ function TabularPanel() {
             </div>
             {error && <p className="mt-3 text-red-300 text-sm">{error}</p>}
           </div>
+
+          {/* Custom CSV mapper toggle + panel */}
+          <label className="inline-flex items-center gap-2 text-sm text-white/70 mt-4">
+            <input
+              type="checkbox"
+              className="accent-white"
+              checked={useCustomMap}
+              onChange={(e) => setUseCustomMap(e.target.checked)}
+            />
+            Use Custom CSV (map columns to tabular schema)
+          </label>
+
+          {useCustomMap && rows.length > 0 && (
+            <div className="mt-3">
+              <CustomTabularMapper
+                headers={headers}
+                rows={rows}
+                onPredict={async (mappedRow) => {
+                  const row = {
+                    ...mappedRow,
+                    koi_period_err1: 1e-4 * Number(mappedRow.koi_period || 0),
+                    koi_period_err2: -1e-4 * Number(mappedRow.koi_period || 0),
+                    koi_time0bk: "",
+                    koi_time0bk_err1: "",
+                    koi_time0bk_err2: "",
+                    koi_depth_err1: "",
+                    koi_depth_err2: "",
+                    koi_duration_err1: "",
+                    koi_duration_err2: "",
+                    koi_impact_err1: "",
+                    koi_impact_err2: "",
+                    koi_quarters: "",
+                  };
+                  const res = await fetch("/api/predict/tabular", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ row }),
+                  });
+                  const data: PredictResponse = await res.json();
+                  setOutput({
+                    predicted_label: data.predicted_label,
+                    predicted_proba: data.predicted_proba,
+                  });
+                  setFeaturesEcho(data.debug_features ?? null);
+                  setExtras(data.extras ?? null);
+                }}
+              />
+            </div>
+          )}
         </GlowCard>
 
         {/* dataset graphs */}
@@ -396,19 +418,8 @@ function TabularPanel() {
         ) : output ? (
           <div className="space-y-6">
             <ProbabilityOrb p={output.predicted_proba} />
-            <RadarFeatures
-              items={(extras?.top_features ?? []).filter((d: any) =>
-                Number.isFinite(d?.z)
-              )}
-            />
-            <FeatureBars
-              zvec={
-                (featuresEcho as any) ??
-                Object.fromEntries(
-                  (extras?.top_features ?? []).map((d: any) => [d.name, d.z])
-                )
-              }
-            />
+            <RadarFeatures items={radarItems} />
+            <FeatureBars zvec={zvec} />
             <RunHistory />
           </div>
         ) : (
@@ -421,7 +432,7 @@ function TabularPanel() {
   );
 }
 
-/* -------------------------- Multimodal -------------------------- */
+/* ---------------- Multimodal ---------------- */
 function MultimodalPanel() {
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<Record<string, string>[]>([]);
@@ -431,11 +442,8 @@ function MultimodalPanel() {
   const [pixelFile, setPixelFile] = useState<File | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [output, setOutput] = useState<ModelOutput | null>(null);
-  const [extras, setExtras] = useState<any | null>(null);
-  const [featuresEcho, setFeaturesEcho] = useState<Record<
-    string,
-    number
-  > | null>(null);
+  const [extras, setExtras] = useState<Extras | null>(null);
+  const [featuresEcho, setFeaturesEcho] = useState<ZVec | null>(null);
 
   const valid = useMemo(
     () => REQ_MULTIMODAL.every((k) => headers.includes(k)),
@@ -476,19 +484,34 @@ function MultimodalPanel() {
         body: fd,
       });
       if (!res.ok) throw new Error("prediction failed");
-      const data = await res.json();
+      const data: PredictResponse = await res.json();
       setOutput({
         predicted_label: data.predicted_label,
         predicted_proba: data.predicted_proba,
       });
       setExtras(data.extras ?? null);
       setFeaturesEcho(data.debug_features ?? null);
-    } catch (e: any) {
-      setError(e?.message || "Prediction error.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Prediction error.";
+      setError(msg);
     } finally {
       setAnalyzing(false);
     }
   };
+
+  // Derived visuals (typed)
+  const radarItems: TopFeature[] = (extras?.top_features ?? []).filter(
+    (t): t is TopFeature => t != null && Number.isFinite(t.z)
+  );
+
+  const zvec: ZVec | null =
+    featuresEcho ??
+    (extras?.top_features
+      ? extras.top_features.reduce<ZVec>((acc, t) => {
+          if (t && Number.isFinite(t.z)) acc[t.name] = t.z;
+          return acc;
+        }, {})
+      : null);
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
@@ -646,19 +669,8 @@ function MultimodalPanel() {
                 {extras?.used_cnn ? "yes" : "no"}
               </span>
             </div>
-            <RadarFeatures
-              items={(extras?.top_features ?? []).filter((d: any) =>
-                Number.isFinite(d?.z)
-              )}
-            />
-            <FeatureBars
-              zvec={
-                (featuresEcho as any) ??
-                Object.fromEntries(
-                  (extras?.top_features ?? []).map((d: any) => [d.name, d.z])
-                )
-              }
-            />
+            <RadarFeatures items={radarItems} />
+            <FeatureBars zvec={zvec} />
           </div>
         ) : (
           <p className="text-white/60 text-sm">
