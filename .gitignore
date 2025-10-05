@@ -1,0 +1,517 @@
+# ==============================================
+# SpaceApps 2025 - Exoplanet Detection Project
+# ==============================================
+
+# ================
+# Python Backend
+# ================
+
+# Virtual environments
+backend/venv/
+backend/.venv/
+backend/env/
+backend/.env/
+AI_Model_Forest/venv/
+AI_Model_Forest/.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# ================
+# Node.js Frontend
+# ================
+
+# Dependencies
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+
+# Production builds
+frontend/.next/
+frontend/out/
+frontend/build
+
+# Runtime data
+frontend/pids
+frontend/*.pid
+frontend/*.seed
+frontend/*.pid.lock
+
+# Coverage directory used by tools like istanbul
+frontend/coverage/
+frontend/.nyc_output
+
+# Grunt intermediate storage
+frontend/.grunt
+
+# Bower dependency directory
+frontend/bower_components
+
+# node-waf configuration
+frontend/.lock-wscript
+
+# Compiled binary addons
+frontend/build/Release
+
+# Dependency directories
+frontend/jspm_packages/
+
+# TypeScript cache
+frontend/*.tsbuildinfo
+
+# Optional npm cache directory
+frontend/.npm
+
+# Optional eslint cache
+frontend/.eslintcache
+
+# Microbundle cache
+frontend/.rpt2_cache/
+frontend/.rts2_cache_cjs/
+frontend/.rts2_cache_es/
+frontend/.rts2_cache_umd/
+
+# Optional REPL history
+frontend/.node_repl_history
+
+# Output of 'npm pack'
+frontend/*.tgz
+
+# Yarn Integrity file
+frontend/.yarn-integrity
+
+# parcel-bundler cache
+frontend/.cache
+frontend/.parcel-cache
+
+# Next.js build output
+frontend/.next
+frontend/out
+
+# Nuxt.js build / generate output
+frontend/.nuxt
+frontend/dist
+
+# Gatsby files
+frontend/.cache/
+frontend/public
+
+# Storybook build outputs
+frontend/.out
+frontend/.storybook-out
+
+# Temporary folders
+frontend/tmp/
+frontend/temp/
+
+# ================
+# ML Models & Data
+# ================
+
+# Large model files (>100MB)
+*.h5
+*.hdf5
+*.keras
+*.ckpt
+*.pb
+*.tflite
+*.onnx
+*.pkl
+*.pickle
+*.joblib
+*.model
+*.weights
+
+# Training artifacts
+AI_Model_Forest/trained_model/*.joblib
+AI_Model_Forest/trained_model/*.pkl
+AI_Model_Forest/trained_model/*.h5
+backend/models/*.joblib
+backend/models/*.pkl
+backend/models/*.h5
+
+# Large datasets
+*.csv.gz
+*.parquet
+*.feather
+*.arrow
+data/*.csv
+!data/sample_*.csv
+!data/test_*.csv
+
+# Specific large files
+data/cumulative_*.csv
+data/TOI_*.csv
+data/combined_*.csv
+AI_Model_Forest/data/*.csv
+!AI_Model_Forest/data/README.md
+
+# Training logs
+logs/
+tensorboard_logs/
+wandb/
+mlruns/
+outputs/
+experiments/
+
+# Model checkpoints
+checkpoints/
+saved_models/
+model_artifacts/
+
+# ================
+# Docker & Containers
+# ================
+
+# Docker volumes
+docker-compose.override.yml
+.docker/
+
+# Container logs
+*.log
+
+# ================
+# Environment & Config
+# ================
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
+!.env.example
+
+# Configuration files with secrets
+config/secrets.json
+config/production.json
+backend/config/secrets.py
+frontend/config/secrets.js
+
+# API keys and credentials
+*.pem
+*.key
+*.crt
+*.p12
+credentials.json
+service-account.json
+
+# ================
+# Database & Cache
+# ================
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Redis dumps
+dump.rdb
+*.rdb
+
+# PostgreSQL
+*.sql
+
+# ================
+# Operating System
+# ================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ================
+# IDEs & Editors
+# ================
+
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*~
+*.swp
+*.swo
+*Session.vim
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# ================
+# Documentation & Assets
+# ================
+
+# Generated documentation
+docs/_build/
+docs/build/
+site/
+
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+*.flv
+*.wmv
+
+# Large images
+*.tiff
+*.bmp
+*.raw
+*.psd
+
+# ================
+# Temporary & Misc
+# ================
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.swp
+*.swo
+*~
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Compiled files
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Optional caches
+.cache/
+.tmp/
+
+# ================
+# Project Specific
+# ================
+
+# Jupyter notebook outputs (keep structure, ignore outputs)
+**/data/*.ipynb
+!**/data/data_eng.ipynb
+
+# Large trained models
+AI_Model_Forest/trained_model/rf_*.joblib
+AI_Model_Forest/trained_model/*_combined*.joblib
+
+# Backup files
+*_backup.*
+*_old.*
+*.backup
+
+# Generated files
+generated/
+auto_generated/
+
+# Test outputs
+test_results/
+test_outputs/
+screenshots/
+
+# ================
+# Keep These Files
+# ================
+
+# Documentation
+!README.md
+!*/README.md
+!docs/*.md
+!*.md
+
+# Configuration examples
+!.env.example
+!config.example.json
+!docker-compose.example.yml
+
+# Sample data
+!data/sample_data.csv
+!**/sample_*.csv
+
+# Requirements files
+!requirements.txt
+!*/requirements.txt
+!package.json
+!*/package.json
+
+# Docker files
+!Dockerfile
+!*/Dockerfile
+!docker-compose.yml
+!.dockerignore
