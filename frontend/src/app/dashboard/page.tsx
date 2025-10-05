@@ -104,7 +104,7 @@ export default function Dashboard() {
           className="mb-8 flex items-center justify-between gap-4"
         >
           <h1 className="text-2xl md:text-4xl font-semibold tracking-tight">
-            Exoplanet Inference Lab
+            nasa-exo-iden-v1
           </h1>
           <Link href="/" className="text-white/60 hover:text-white text-sm">
             ← back
@@ -234,9 +234,7 @@ function TabularPanel() {
             }}
             className="border border-dashed border-white/20 rounded-2xl p-8 text-center hover:border-white/40 transition"
           >
-            <p className="text-white/70">
-              Drag & drop a CSV (Template 1 or 2).
-            </p>
+            <p className="text-white/70">Drag & drop a CSV.</p>
             <div className="mt-4">
               <label className="inline-block px-4 py-2 rounded-xl bg-white text-black font-medium cursor-pointer hover:opacity-90">
                 <input
