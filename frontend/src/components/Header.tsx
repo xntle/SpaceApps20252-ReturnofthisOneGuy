@@ -10,7 +10,7 @@ export function Header() {
           href="/"
           className="tracking-[0.2em] uppercase text-xs text-white/70 hover:text-white transition"
         >
-          returnofthisoneguy
+          nasa-exo-iden-v1
         </Link>
       </div>
     </header>
