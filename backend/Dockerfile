@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir fastapi>=0.104.0 uvicorn[standard]>=0.24.0 websoc
 RUN pip install --no-cache-dir redis>=5.0.0 celery>=5.3.0 pydantic>=2.5.0
 RUN pip install --no-cache-dir python-dotenv>=1.0.0 python-multipart>=0.0.6
 RUN pip install --no-cache-dir numpy pandas scikit-learn joblib
-
+RUN pip install --no-cache-dir torch>=1.12.0 torchvision>=0.13.0
 
 # Copy application code
 COPY . .
