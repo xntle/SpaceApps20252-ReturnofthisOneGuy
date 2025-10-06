@@ -441,6 +441,209 @@ def predict_batch_tabular(self, predictions_data: List[Dict[str, Any]], batch_id
         
         raise Exception(error_msg)
 
+@celery_app.task(bind=True, name='predict_single_multimodal')
+def predict_single_multimodal(self, prediction_data: Dict[str, Any], 
+                               cnn1d_data: List[float] = None,
+                               cnn2d_data: List[List[List[float]]] = None) -> Dict[str, Any]:
+    """
+    Celery task for single Enhanced Multimodal prediction
+    """
+    task_id = self.request.id
+    logger.info(f"Starting multimodal prediction task {task_id}")
+    
+    try:
+        # Update task status
+        self.update_state(
+            state=TaskStatus.PROCESSING.value,
+            meta={
+                'status': TaskStatus.PROCESSING.value,
+                'progress': 25,
+                'message': 'Processing multimodal prediction...',
+                'model_type': 'enhanced_multimodal_fusion'
+            }
+        )
+        
+        # Get multimodal predictor
+        from multimodal_service import get_multimodal_predictor
+        predictor = get_multimodal_predictor()
+        
+        if not predictor.is_loaded:
+            if not predictor.load_model():
+                raise Exception("Failed to load Enhanced Multimodal model")
+        
+        # Update status
+        self.update_state(
+            state=TaskStatus.PROCESSING.value,
+            meta={
+                'status': TaskStatus.PROCESSING.value,
+                'progress': 50,
+                'message': 'Running Enhanced Multimodal inference...',
+                'model_type': 'enhanced_multimodal_fusion'
+            }
+        )
+        
+        # Create prediction request
+        request = ExoplanetPredictionRequest(**prediction_data)
+        
+        # Convert CNN data if provided
+        import numpy as np
+        cnn1d_array = np.array(cnn1d_data) if cnn1d_data else None
+        cnn2d_array = np.array(cnn2d_data) if cnn2d_data else None
+        
+        # Make prediction
+        result = predictor.predict(request, cnn1d_array, cnn2d_array)
+        
+        # Update final status
+        self.update_state(
+            state=TaskStatus.COMPLETED.value,
+            meta={
+                'status': TaskStatus.COMPLETED.value,
+                'progress': 100,
+                'message': 'Enhanced Multimodal prediction completed',
+                'prediction': result.prediction,
+                'probability': result.probability,
+                'model_type': 'enhanced_multimodal_fusion'
+            }
+        )
+        
+        logger.info(f"Multimodal prediction task {task_id} completed: {result.prediction} (p={result.probability:.3f})")
+        
+        return {
+            'task_id': task_id,
+            'result': result.dict(),
+            'status': TaskStatus.COMPLETED.value,
+            'model_type': 'enhanced_multimodal_fusion'
+        }
+        
+    except Exception as e:
+        error_msg = f"Enhanced Multimodal prediction failed: {str(e)}"
+        logger.error(f"Task {task_id} failed: {error_msg}")
+        
+        self.update_state(
+            state=TaskStatus.FAILED.value,
+            meta={
+                'status': TaskStatus.FAILED.value,
+                'error': error_msg,
+                'progress': 0,
+                'model_type': 'enhanced_multimodal_fusion'
+            }
+        )
+        
+        raise Exception(error_msg)
+
+@celery_app.task(bind=True, name='predict_batch_multimodal')
+def predict_batch_multimodal(self, batch_data: List[Dict[str, Any]], 
+                             batch_cnn1d_data: List[List[float]] = None,
+                             batch_cnn2d_data: List[List[List[List[float]]]] = None,
+                             batch_id: str = None) -> Dict[str, Any]:
+    """
+    Celery task for batch Enhanced Multimodal predictions
+    """
+    task_id = self.request.id
+    batch_id = batch_id or str(uuid.uuid4())
+    total_predictions = len(batch_data)
+    
+    logger.info(f"Starting multimodal batch prediction task {task_id} with {total_predictions} predictions")
+    
+    try:
+        # Update task status
+        self.update_state(
+            state=TaskStatus.PROCESSING.value,
+            meta={
+                'status': TaskStatus.PROCESSING.value,
+                'progress': 10,
+                'message': f'Initializing multimodal batch prediction for {total_predictions} items...',
+                'batch_id': batch_id,
+                'total_items': total_predictions,
+                'model_type': 'enhanced_multimodal_fusion'
+            }
+        )
+        
+        # Get multimodal predictor
+        from multimodal_service import get_multimodal_predictor
+        predictor = get_multimodal_predictor()
+        
+        if not predictor.is_loaded:
+            if not predictor.load_model():
+                raise Exception("Failed to load Enhanced Multimodal model")
+        
+        # Create prediction requests
+        requests = [ExoplanetPredictionRequest(**data) for data in batch_data]
+        
+        # Convert CNN data if provided
+        import numpy as np
+        cnn1d_arrays = None
+        cnn2d_arrays = None
+        
+        if batch_cnn1d_data and len(batch_cnn1d_data) == total_predictions:
+            cnn1d_arrays = [np.array(data) for data in batch_cnn1d_data]
+        
+        if batch_cnn2d_data and len(batch_cnn2d_data) == total_predictions:
+            cnn2d_arrays = [np.array(data) for data in batch_cnn2d_data]
+        
+        # Update status
+        self.update_state(
+            state=TaskStatus.PROCESSING.value,
+            meta={
+                'status': TaskStatus.PROCESSING.value,
+                'progress': 30,
+                'message': f'Processing {total_predictions} multimodal predictions...',
+                'batch_id': batch_id,
+                'model_type': 'enhanced_multimodal_fusion'
+            }
+        )
+        
+        start_time = time.time()
+        
+        # Make batch predictions
+        results = predictor.predict_batch(requests, cnn1d_arrays, cnn2d_arrays)
+        
+        processing_time = time.time() - start_time
+        
+        # Update final status
+        self.update_state(
+            state=TaskStatus.COMPLETED.value,
+            meta={
+                'status': TaskStatus.COMPLETED.value,
+                'progress': 100,
+                'message': f'Multimodal batch prediction completed successfully',
+                'batch_id': batch_id,
+                'total_predictions': total_predictions,
+                'completed_predictions': total_predictions,
+                'processing_time': processing_time,
+                'model_type': 'enhanced_multimodal_fusion'
+            }
+        )
+        
+        logger.info(f"Multimodal batch prediction task {task_id} completed {total_predictions} predictions in {processing_time:.2f}s")
+        
+        return {
+            'task_id': task_id,
+            'batch_id': batch_id,
+            'results': [result.dict() for result in results],
+            'total_predictions': total_predictions,
+            'processing_time': processing_time,
+            'status': TaskStatus.COMPLETED.value,
+            'model_type': 'enhanced_multimodal_fusion'
+        }
+        
+    except Exception as e:
+        error_msg = f"Enhanced Multimodal batch prediction failed: {str(e)}"
+        logger.error(f"Batch task {task_id} failed: {error_msg}")
+        
+        self.update_state(
+            state=TaskStatus.FAILED.value,
+            meta={
+                'status': TaskStatus.FAILED.value,
+                'error': error_msg,
+                'batch_id': batch_id,
+                'progress': 0,
+                'model_type': 'enhanced_multimodal_fusion'
+            }
+        )
+        
+        raise Exception(error_msg)
+
 if __name__ == '__main__':
     # Start worker with: celery -A worker worker --loglevel=info
     celery_app.start()
