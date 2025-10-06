@@ -21,6 +21,7 @@ RUN pip install --no-cache-dir redis>=5.0.0 celery>=5.3.0 pydantic>=2.5.0
 RUN pip install --no-cache-dir python-dotenv>=1.0.0 python-multipart>=0.0.6
 RUN pip install --no-cache-dir numpy pandas scikit-learn joblib
 
+
 # Copy application code
 COPY . .
 
