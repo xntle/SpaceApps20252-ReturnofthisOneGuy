@@ -35,6 +35,7 @@ class PredictionResult(BaseModel):
     probability: float = Field(..., ge=0, le=1, description="Confidence probability")
     confidence_level: str = Field(..., description="High/Medium/Low confidence")
     processing_time_ms: float = Field(..., description="Processing time in milliseconds")
+    model_used: Optional[str] = Field(None, description="Model type used for prediction")
 
 class TaskTelemetry(BaseModel):
     """Telemetry data for task monitoring"""
@@ -91,6 +92,15 @@ class SystemMetrics(BaseModel):
     current_queue_size: int
     system_load: float = Field(..., ge=0, le=100)
     uptime_hours: float
+
+class TaskResponse(BaseModel):
+    """Response for async task submission"""
+    task_id: str
+    status: TaskStatus
+    message: str
+    batch_id: Optional[str] = None
+    total_items: Optional[int] = None
+    model_type: Optional[str] = None
 
 class HealthCheck(BaseModel):
     """Health check response"""

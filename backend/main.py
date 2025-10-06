@@ -485,6 +485,218 @@ async def tabular_health_check():
         logger.error(f"TabularNet health check failed: {e}")
         raise HTTPException(status_code=503, detail="TabularNet service unhealthy")
 
+# ==================== ENHANCED MULTIMODAL FUSION ENDPOINTS ====================
+
+@app.post("/multimodal/predict/sync", response_model=PredictionResult)
+async def predict_multimodal_sync(
+    request: ExoplanetPredictionRequest,
+    cnn1d_data: Optional[List[List[float]]] = None,
+    cnn2d_data: Optional[List[List[List[List[float]]]]] = None
+):
+    """
+    Synchronous Enhanced Multimodal prediction (for low-latency requirements)
+    
+    Enhanced multimodal fusion combines:
+    - Tabular features (39 features)
+    - CNN1D light curve data (5 windows × 128 points)
+    - CNN2D phase-folded images (32 phases × 24×24 pixels)
+    
+    Ideal for: Complex multimodal analysis with attention mechanisms
+    Performance: ~200ms, 87.2% accuracy
+    """
+    try:
+        from multimodal_service import get_multimodal_predictor
+        predictor = get_multimodal_predictor()
+        
+        if not predictor.is_loaded:
+            if not predictor.load_model():
+                raise HTTPException(status_code=500, detail="Failed to load Enhanced Multimodal model")
+        
+        # Convert CNN data if provided
+        import numpy as np
+        cnn1d_array = np.array(cnn1d_data[0]) if cnn1d_data and len(cnn1d_data) > 0 else None
+        cnn2d_array = np.array(cnn2d_data[0]) if cnn2d_data and len(cnn2d_data) > 0 else None
+        
+        result = predictor.predict(request, cnn1d_array, cnn2d_array)
+        
+        logger.info(f"Enhanced Multimodal sync prediction: {result.prediction} (p={result.probability:.3f}, {result.processing_time_ms:.1f}ms)")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Enhanced Multimodal sync prediction error: {e}")
+        raise HTTPException(status_code=500, detail=f"Enhanced Multimodal prediction failed: {str(e)}")
+
+@app.post("/multimodal/predict", response_model=TaskResponse)
+async def predict_multimodal_async(
+    request: ExoplanetPredictionRequest,
+    cnn1d_data: Optional[List[List[float]]] = None,
+    cnn2d_data: Optional[List[List[List[List[float]]]]] = None
+):
+    """
+    Asynchronous Enhanced Multimodal prediction using Celery
+    
+    Returns immediately with task_id for status checking
+    Use /status/{task_id} to check progress and get results
+    """
+    try:
+        from worker import predict_single_multimodal
+        
+        # Convert CNN data to serializable format
+        cnn1d_list = cnn1d_data[0] if cnn1d_data and len(cnn1d_data) > 0 else None
+        cnn2d_list = cnn2d_data[0] if cnn2d_data and len(cnn2d_data) > 0 else None
+        
+        task = predict_single_multimodal.delay(
+            request.dict(),
+            cnn1d_list,
+            cnn2d_list
+        )
+        
+        logger.info(f"Enhanced Multimodal async task created: {task.id}")
+        
+        return TaskResponse(
+            task_id=task.id,
+            status=TaskStatus.PENDING,
+            message="Enhanced Multimodal prediction task queued",
+            model_type="enhanced_multimodal_fusion"
+        )
+        
+    except Exception as e:
+        logger.error(f"Enhanced Multimodal async prediction error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to queue Enhanced Multimodal prediction: {str(e)}")
+
+@app.post("/multimodal/predict/batch", response_model=TaskResponse)
+async def predict_multimodal_batch(
+    requests: List[ExoplanetPredictionRequest],
+    cnn1d_batch: Optional[List[List[List[float]]]] = None,
+    cnn2d_batch: Optional[List[List[List[List[List[float]]]]]] = None,
+    batch_id: Optional[str] = None
+):
+    """
+    Enhanced Multimodal batch prediction using Celery
+    
+    Efficiently processes multiple predictions with multimodal data
+    Returns task_id for monitoring batch progress
+    """
+    try:
+        if len(requests) == 0:
+            raise HTTPException(status_code=400, detail="No prediction requests provided")
+        
+        if len(requests) > 1000:
+            raise HTTPException(status_code=400, detail="Batch size too large (max 1000)")
+        
+        from worker import predict_batch_multimodal
+        
+        # Convert to serializable format
+        batch_data = [request.dict() for request in requests]
+        batch_id = batch_id or str(uuid.uuid4())
+        
+        # Convert CNN data to serializable format
+        cnn1d_serializable = cnn1d_batch if cnn1d_batch else None
+        cnn2d_serializable = cnn2d_batch if cnn2d_batch else None
+        
+        task = predict_batch_multimodal.delay(
+            batch_data,
+            cnn1d_serializable,
+            cnn2d_serializable,
+            batch_id
+        )
+        
+        logger.info(f"Enhanced Multimodal batch task created: {task.id} for {len(requests)} predictions")
+        
+        return TaskResponse(
+            task_id=task.id,
+            status=TaskStatus.PENDING,
+            message=f"Enhanced Multimodal batch prediction queued for {len(requests)} items",
+            batch_id=batch_id,
+            total_items=len(requests),
+            model_type="enhanced_multimodal_fusion"
+        )
+        
+    except Exception as e:
+        logger.error(f"Enhanced Multimodal batch prediction error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to queue Enhanced Multimodal batch prediction: {str(e)}")
+
+@app.get("/multimodal/model/info")
+async def get_multimodal_model_info():
+    """Get Enhanced Multimodal Fusion model information and specifications"""
+    try:
+        from multimodal_service import get_multimodal_predictor
+        predictor = get_multimodal_predictor()
+        
+        return predictor.get_model_info()
+        
+    except Exception as e:
+        logger.error(f"Error getting Enhanced Multimodal model info: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get Enhanced Multimodal model info: {str(e)}")
+
+@app.post("/multimodal/analyze")
+async def analyze_multimodal_components(
+    request: ExoplanetPredictionRequest,
+    cnn1d_data: Optional[List[List[float]]] = None,
+    cnn2d_data: Optional[List[List[List[List[float]]]]] = None
+):
+    """
+    Get individual component predictions from Enhanced Multimodal model
+    
+    Returns predictions from:
+    - Tabular neural network
+    - CNN1D light curve analysis  
+    - CNN2D phase image analysis
+    - Final fusion prediction
+    """
+    try:
+        from multimodal_service import get_multimodal_predictor
+        predictor = get_multimodal_predictor()
+        
+        if not predictor.is_loaded:
+            if not predictor.load_model():
+                raise HTTPException(status_code=500, detail="Failed to load Enhanced Multimodal model")
+        
+        # Convert CNN data if provided
+        import numpy as np
+        cnn1d_array = np.array(cnn1d_data[0]) if cnn1d_data and len(cnn1d_data) > 0 else None
+        cnn2d_array = np.array(cnn2d_data[0]) if cnn2d_data and len(cnn2d_data) > 0 else None
+        
+        analysis = predictor.get_individual_predictions(request, cnn1d_array, cnn2d_array)
+        
+        logger.info(f"Enhanced Multimodal component analysis completed")
+        return analysis
+        
+    except Exception as e:
+        logger.error(f"Enhanced Multimodal analysis error: {e}")
+        raise HTTPException(status_code=500, detail=f"Enhanced Multimodal analysis failed: {str(e)}")
+
+@app.get("/multimodal/health")
+async def multimodal_health_check():
+    """Health check specifically for Enhanced Multimodal Fusion model"""
+    try:
+        from multimodal_service import get_multimodal_predictor
+        
+        multimodal_predictor = get_multimodal_predictor()
+        
+        health_data = {
+            "status": "healthy" if multimodal_predictor.is_loaded else "unhealthy",
+            "model_loaded": multimodal_predictor.is_loaded,
+            "model_type": "Enhanced Multimodal Fusion (PyTorch)",
+            "device": str(multimodal_predictor.device) if multimodal_predictor.is_loaded else "unknown",
+            "timestamp": utc_now().isoformat(),
+            "accuracy": "87.2%",
+            "architecture": "Tabular + CNN1D + CNN2D Fusion",
+            "parameters": multimodal_predictor.get_model_info().get("parameters", {}).get("total", "unknown") if multimodal_predictor.is_loaded else "unknown"
+        }
+        
+        if not multimodal_predictor.is_loaded:
+            logger.warning("Enhanced Multimodal model health check failed - model not loaded")
+            raise HTTPException(status_code=503, detail="Enhanced Multimodal model not loaded")
+            
+        return health_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Enhanced Multimodal health check failed: {e}")
+        raise HTTPException(status_code=503, detail="Enhanced Multimodal service unhealthy")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
