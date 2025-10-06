@@ -172,10 +172,10 @@ function TabularPanel() {
     setAnalyzing(true);
     const row = rows[selected];
     try {
-      const res = await fetch("http://localhost:8000/tabular/predict", {
+      const res = await fetch("http://localhost:8000/tabular/predict/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ row }),
+        body: JSON.stringify(row),
       });
       if (!res.ok) throw new Error("prediction failed");
       const data: PredictResponse = await res.json();
@@ -479,7 +479,7 @@ function MultimodalPanel() {
     /*unsure why these have to be appended to the request body?*/
 
     try {
-      const res = await fetch("http://localhost:8000/multimodal/predict/sync", {
+      const res = await fetch("http://localhost:8000/predict_exoplanet", {
         method: "POST",
         body: fd,
       });
