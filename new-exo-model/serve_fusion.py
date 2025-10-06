@@ -27,10 +27,10 @@ import numpy as np, torch, joblib, yaml, os, sys
 from typing import Optional
 
 # Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # import our utilities
-from fusion.utils_fusion import (
+from utils_fusion import (
     PATHS, load_rf_pipeline, load_torch_model,
     predict_rf, predict_residual, predict_pixel,
     predict_stacker, DEVICE
@@ -146,7 +146,7 @@ print(f"[INFO] Models loaded on {DEVICE}. Threshold τ={TAU:.3f}")
 # -------------------------------------------------------------------
 @app.post("/predict_exoplanet")
 async def predict_exoplanet(
-    kepid: Optional[int] = Form(None),
+    kepid: Optional[str] = Form(None),
     features: Optional[str] = Form(None),
     residual_window_path: Optional[str] = Form(None),
     pixel_image_path: Optional[str] = Form(None)

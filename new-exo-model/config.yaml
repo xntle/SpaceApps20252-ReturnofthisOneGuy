@@ -1,0 +1,14 @@
+fusion:
+  features:
+  - p_rf
+  - p_res
+  - p_pix
+  - m_rf
+  - m_res
+  - m_pix
+  threshold:
+    tau: 0.43
+  means:
+    p_rf: 0.5
+    p_res: 0.45979174971580505
+    p_pix: 0.4876742660999298
