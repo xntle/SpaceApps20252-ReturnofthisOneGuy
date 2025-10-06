@@ -5,6 +5,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1.0-orange.svg)](https://pytorch.org)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black.svg)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green.svg)](https://fastapi.tiangolo.com)
+<img width="1487" height="817" alt="Screenshot 2025-10-05 at 10 52 21 PM" src="https://github.com/user-attachments/assets/42760cee-4d75-40b0-9685-ff703cbf899f" />
 
 > **Challenge**: Develop an advanced machine learning platform to identify exoplanets from Kepler and TESS mission data using state-of-the-art multimodal AI architectures.
 
