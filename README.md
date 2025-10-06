@@ -1,27 +1,28 @@
-# 🌌 Exoplanet Detection Platform - SpaceApps 2025
+# Exoplanet Detection Platform - SpaceApps 2025
 
 [![NASA SpaceApps Challenge](https://img.shields.io/badge/NASA-SpaceApps%202025-blue.svg)](https://www.spaceappschallenge.org/)
 [![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://python.org)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1.0-orange.svg)](https://pytorch.org)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black.svg)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green.svg)](https://fastapi.tiangolo.com)
+<img width="1487" height="817" alt="Screenshot 2025-10-05 at 10 52 21 PM" src="https://github.com/user-attachments/assets/42760cee-4d75-40b0-9685-ff703cbf899f" />
 
-> **🎯 Challenge**: Develop an advanced machine learning platform to identify exoplanets from Kepler and TESS mission data using state-of-the-art multimodal AI architectures.
+> **Challenge**: Develop an advanced machine learning platform to identify exoplanets from Kepler and TESS mission data using state-of-the-art multimodal AI architectures.
 
-## 🚀 Project Overview
+## Project Overview
 
 Launched: https://exoident.us/
 This project implements a **comprehensive exoplanet detection system** combining multiple machine learning approaches with a modern web interface. The platform processes stellar and transit parameters from NASA's Kepler and TESS missions to identify potential exoplanets with high accuracy.
 
-### 🏆 Key Achievements
+### Key Achievements
 
-- **🧠 Advanced AI Models**: Enhanced Multimodal Fusion (PyTorch) + Random Forest ensemble
-- **📊 High Accuracy**: Up to 93.6% accuracy on tabular features, 87.2% on multimodal fusion  
-- **⚡ Distributed Architecture**: Scalable FastAPI backend with Celery workers
-- **🎨 Modern UI**: Responsive Next.js frontend with real-time predictions
-- **🐳 Production Ready**: Full Docker containerization and CI/CD support
+- ** Advanced AI Models **: Enhanced Multimodal Fusion (PyTorch) + Random Forest ensemble
+- ** High Accuracy **: Up to 93.6% accuracy on tabular features, 87.2% on multimodal fusion  
+- ** Distributed Architecture **: Scalable FastAPI backend with Celery workers
+- ** Modern UI **: Responsive Next.js frontend with real-time predictions
+- ** Production Ready **: Full Docker containerization and CI/CD support
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -43,9 +44,9 @@ This project implements a **comprehensive exoplanet detection system** combining
                        └─────────────────┘    └─────────────────┘
 ```
 
-## 🎯 Features
+##  Features
 
-### 🧠 Machine Learning Models
+### Machine Learning Models
 
 | Model | Type | Accuracy | Parameters | Use Case |
 |-------|------|----------|------------|----------|
@@ -53,50 +54,51 @@ This project implements a **comprehensive exoplanet detection system** combining
 | **Tabular PyTorch** | Deep Learning | 93.6% | 52K | Fast, reliable predictions |
 | **Random Forest** | Ensemble | 85.0% | Variable | Baseline comparison |
 
-### 🔬 Data Processing
+### Data Processing
 
 - **Sources**: Kepler KOI, TESS TOI candidate data
 - **Features**: 39 stellar/transit parameters per candidate
 - **Pipeline**: Automated preprocessing, scaling, missing value imputation
 - **Format**: Support for both individual and batch predictions
 
-### 🌐 Web Platform
+### Web Platform
 
 - **Frontend**: Modern React interface with real-time updates
 - **Backend**: FastAPI with automatic OpenAPI documentation
 - **Real-time**: WebSocket connections for live prediction monitoring
 - **Scalable**: Distributed worker architecture with Redis
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 SpaceApps2025-ReturnofthisOneGuy/
-├── 🎨 frontend/                    # Next.js React application
+├── frontend/                    # Next.js React application
 │   ├── src/components/            # Reusable UI components
 │   ├── src/pages/                 # Application pages
 │   └── public/                    # Static assets
-├── 🚀 backend/                     # FastAPI distributed backend
+├── backend/                     # FastAPI distributed backend
 │   ├── main.py                    # FastAPI application entry
 │   ├── ml_service.py              # PyTorch model integration
 │   ├── worker.py                  # Celery distributed workers
 │   └── models.py                  # Pydantic data models
-├── 🧠 exoplanet-detection-pipeline/ # Advanced PyTorch models
+├    ── exoplanet-detection-pipeline/ # Advanced PyTorch models
 │   ├── models/                    # Trained model files (.pth)
 │   ├── src/                       # Model architectures
 │   └── train_multimodal_enhanced.py # Training scripts
-├── 🌲 AI_Model_Forest/             # Random Forest models
+-----AI_Model_Forest/             # Random Forest models
 │   ├── trained_model/             # Scikit-learn models
 │   └── ml_model/                  # Training/inference code
-├── 📊 data/                        # Kepler/TESS datasets
+
+├── data/                        # Kepler/TESS datasets
 │   ├── combined_kepler_tess_exoplanets.csv
 │   └── data_eng.ipynb             # Data engineering notebook
-├── 🐳 docker-compose.yml           # Multi-service orchestration
-└── 📚 README.md                    # This file
+├── docker-compose.yml           # Multi-service orchestration
+└── README.md                    # This file
 ```
 
-## ⚡ Quick Start
+## Quick Start
 
-### 🐳 Option 1: Docker (Recommended)
+### Option 1: Docker (Recommended)
 
 ```bash
 # Clone the repository
@@ -114,13 +116,13 @@ docker-compose logs -f backend
 ```
 
 **Services Available:**
-- 🌐 **Frontend**: http://localhost:3000
-- 🚀 **Backend API**: http://localhost:8000
-- 📖 **API Docs**: http://localhost:8000/docs
-- 🌸 **Worker Monitor**: http://localhost:5555
-- 🔗 **WebSocket**: ws://localhost:8000/ws
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+- **Worker Monitor**: http://localhost:5555
+- **WebSocket**: ws://localhost:8000/ws
 
-### 💻 Option 2: Local Development
+### Option 2: Local Development
 
 #### Backend Setup
 ```bash
@@ -148,7 +150,7 @@ npm install
 npm run dev
 ```
 
-## 🧪 Testing the Platform
+## Testing the Platform
 
 ### 1. **Health Check**
 ```bash
@@ -186,7 +188,7 @@ curl -X POST http://localhost:8000/api/v1/predict \
 }
 ```
 
-## 🔬 Model Details
+## Model Details
 
 ### Enhanced Multimodal Fusion Architecture
 
@@ -208,11 +210,11 @@ Input Processing:
 ```
 
 **Key Features:**
-- 🔄 **Residual Connections**: Improved gradient flow
-- 🎯 **Attention Mechanisms**: Focus on important features  
-- 🛡️ **Regularization**: Batch normalization + dropout
-- ⚖️ **Adaptive Pooling**: Variable input size handling
-- 🎲 **Xavier Initialization**: Stable weight initialization
+-  **Residual Connections**: Improved gradient flow
+-  **Attention Mechanisms**: Focus on important features  
+-  **Regularization**: Batch normalization + dropout
+-  **Adaptive Pooling**: Variable input size handling
+-  **Xavier Initialization**: Stable weight initialization
 
 ### Training Data
 
@@ -222,7 +224,7 @@ Input Processing:
 - **Features**: Orbital period, transit depth, stellar properties, etc.
 - **Labels**: Confirmed exoplanets vs false positives
 
-## 📊 Performance Metrics
+##  Performance Metrics
 
 ### Model Comparison
 
@@ -242,7 +244,7 @@ Input Processing:
 - **Concurrency**: Supports 50+ simultaneous users
 - **Worker Scaling**: Horizontal scaling via Celery
 
-## 🛠️ Development
+##  Development
 
 ### Adding New Models
 
@@ -278,7 +280,7 @@ export function CustomComponent() {
 }
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -301,7 +303,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_WS_URL=ws://localhost:8000
 ```
 
-## 📈 Monitoring & Observability
+## Monitoring & Observability
 
 ### Health Checks
 
@@ -323,7 +325,7 @@ Real-time monitoring of:
 - System health status
 - Worker task progress
 
-## 🚀 Deployment
+## Deployment
 
 ### Production Deployment
 
@@ -352,7 +354,7 @@ The platform supports deployment on:
 - **Azure**: Container Instances or AKS
 - **Local**: Docker Swarm or Kubernetes
 
-## 🤝 Contributing
+##  Contributing
 
 ### Development Workflow
 
@@ -369,16 +371,16 @@ The platform supports deployment on:
 - **Testing**: Unit tests for all models and APIs
 - **Documentation**: Clear docstrings and comments
 
-## 📜 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👥 Team
+## Team
 
 **Team Name**: ReturnofthisOneGuy  
 **Challenge**: NASA SpaceApps Challenge 2025
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **NASA** for providing Kepler and TESS datasets
 - **SpaceApps Challenge** for the inspiring challenge
@@ -386,7 +388,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **FastAPI** for the excellent web framework
 - **Open Source Community** for countless tools and libraries
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **🔗 NASA Exoplanet Archive**: https://exoplanetarchive.ipac.caltech.edu/
 - **🔗 TESS Mission**: https://tess.mit.edu/
@@ -394,8 +396,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **🔗 PyTorch Documentation**: https://pytorch.org/docs/
 - **🔗 FastAPI Documentation**: https://fastapi.tiangolo.com/
 
----
 
-**🌟 Star this repository if you found it helpful!**
 
-*Built with ❤️ for NASA SpaceApps Challenge 2025*
