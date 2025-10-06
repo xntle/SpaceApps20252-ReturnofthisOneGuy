@@ -44,7 +44,7 @@ pip install fastapi uvicorn python-multipart xgboost pyyaml
 ### 5. Start the Fusion API Server
 ```bash
 # From project root directory
-python -m uvicorn fusion.serve_fusion:app --host 0.0.0.0 --port 8001
+python -m uvicorn serve_fusion:app --host 0.0.0.0 --port 8001
 ```
 
 The API will be available at: **http://localhost:8001**

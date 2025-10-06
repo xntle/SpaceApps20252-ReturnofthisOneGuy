@@ -82,21 +82,24 @@ def pipeline_demo():
     if not check_requirements():
         print("\\n❌ Cannot proceed due to missing requirements")
         return False
+    # Get python executable path
+    import sys
+    python_exe = sys.executable
     
     steps = [
-        ("/home/roshan/Desktop/new-exo-model/.venv/bin/python src/build_residual_manifest.py", 
+        (f"{python_exe} src/build_residual_manifest.py", 
          "Building dataset manifest from residual windows and labels"),
         
-        ("/home/roshan/Desktop/new-exo-model/.venv/bin/python src/train_residual.py", 
+        (f"{python_exe} src/train_residual.py", 
          "Training Residual CNN model (this may take several minutes)"),
         
-        ("/home/roshan/Desktop/new-exo-model/.venv/bin/python src/evaluate_residual.py", 
+        (f"{python_exe} src/evaluate_residual.py", 
          "Evaluating trained model and generating detailed metrics"),
         
-        ("/home/roshan/Desktop/new-exo-model/.venv/bin/python src/predict_residual.py --analyze processed/residual_windows_std/residual_10024051.npy", 
+        (f"{python_exe} src/predict_residual.py --analyze processed/residual_windows_std/residual_10024051.npy", 
          "Testing inference on a sample residual window"),
         
-        ("/home/roshan/Desktop/new-exo-model/.venv/bin/python fusion_demo.py processed/residual_windows_std/residual_10024051.npy", 
+        (f"{python_exe} fusion_demo.py processed/residual_windows_std/residual_10024051.npy", 
          "Demonstrating fusion with tabular model")
     ]
     
@@ -169,17 +172,21 @@ def quick_test():
     """Run a quick test of key components"""
     print("Running quick component tests...")
     
+    # Get python executable path
+    import sys
+    python_exe = sys.executable
+    
     tests = [
         ("ls processed/residual_windows_std/ | head -3", 
          "Checking residual data availability"),
         
-        ("/home/roshan/Desktop/new-exo-model/.venv/bin/python -c 'import torch; print(f\"PyTorch: {torch.__version__}\")'", 
+        (f"{python_exe} -c 'import torch; print(f\"PyTorch: {{torch.__version__}}\")'", 
          "Verifying PyTorch installation"),
         
-        ("/home/roshan/Desktop/new-exo-model/.venv/bin/python -c 'from src.models_residual import ResidualCNN1D; print(\"Model import OK\")'", 
+        (f"{python_exe} -c 'from src.models_residual import ResidualCNN1D; print(\"Model import OK\")'", 
          "Testing model imports"),
         
-        ("/home/roshan/Desktop/new-exo-model/.venv/bin/python -c 'import pandas as pd; df=pd.read_csv(\"processed/residual_manifest.csv\"); print(f\"Manifest: {len(df)} samples\")'", 
+        (f"{python_exe} -c 'import pandas as pd; df=pd.read_csv(\"processed/residual_manifest.csv\"); print(f\"Manifest: {{len(df)}} samples\")'", 
          "Checking dataset manifest")
     ]
     

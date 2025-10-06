@@ -17,7 +17,7 @@ from typing import Dict, Tuple, Optional
 # 🔹 PATHS CONFIG
 # =========================
 import os
-BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE = os.path.dirname(os.path.abspath(__file__))
 
 PATHS = {
     "rf_model": f"{BASE}/AI_Model_Forest/trained_model/rf_combined_model.joblib",
@@ -27,8 +27,8 @@ PATHS = {
 
     "residual_weights": [f"{BASE}/residual_model/models/residual_cnn_best_fold{i}.pt" for i in range(5)],
     "pixel_weights": [f"{BASE}/pixel_CNN/models/pixel_cnn_best_fold{i}.pt" for i in range(5)],
-    "stacker_model": f"{BASE}/fusion/models/stacker_xgb.pkl",
-    "config": f"{BASE}/fusion/config.yaml"
+    "stacker_model": f"{BASE}/models/stacker_xgb.pkl",
+    "config": f"{BASE}/config.yaml"
 }
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
