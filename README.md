@@ -10,6 +10,7 @@
 
 ## 🚀 Project Overview
 
+Launched: https://exoident.us/
 This project implements a **comprehensive exoplanet detection system** combining multiple machine learning approaches with a modern web interface. The platform processes stellar and transit parameters from NASA's Kepler and TESS missions to identify potential exoplanets with high accuracy.
 
 ### 🏆 Key Achievements
