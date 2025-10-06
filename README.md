@@ -16,11 +16,11 @@ This project implements a **comprehensive exoplanet detection system** combining
 
 ### Key Achievements
 
-- ** Advanced AI Models**: Enhanced Multimodal Fusion (PyTorch) + Random Forest ensemble
-- ** High Accuracy**: Up to 93.6% accuracy on tabular features, 87.2% on multimodal fusion  
-- ** Distributed Architecture**: Scalable FastAPI backend with Celery workers
-- ** Modern UI**: Responsive Next.js frontend with real-time predictions
-- ** Production Ready**: Full Docker containerization and CI/CD support
+- ** Advanced AI Models **: Enhanced Multimodal Fusion (PyTorch) + Random Forest ensemble
+- ** High Accuracy **: Up to 93.6% accuracy on tabular features, 87.2% on multimodal fusion  
+- ** Distributed Architecture **: Scalable FastAPI backend with Celery workers
+- ** Modern UI **: Responsive Next.js frontend with real-time predictions
+- ** Production Ready **: Full Docker containerization and CI/CD support
 
 ## Architecture
 
