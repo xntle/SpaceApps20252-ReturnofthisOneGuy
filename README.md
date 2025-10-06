@@ -96,9 +96,9 @@ SpaceApps2025-ReturnofthisOneGuy/
 └── README.md                    # This file
 ```
 
-## ⚡ Quick Start
+## Quick Start
 
-### 🐳 Option 1: Docker (Recommended)
+### Option 1: Docker (Recommended)
 
 ```bash
 # Clone the repository
