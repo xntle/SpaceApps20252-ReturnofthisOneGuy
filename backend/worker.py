@@ -250,6 +250,197 @@ celery_app.conf.task_routes = {
     'health_check': {'queue': 'monitoring'}
 }
 
+# Tabular-specific tasks
+@celery_app.task(bind=True, name='predict_single_tabular')
+def predict_single_tabular(self, prediction_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Celery task for single exoplanet prediction using TabularNet only
+    """
+    task_id = self.request.id
+    logger.info(f"Starting tabular prediction task {task_id}")
+    
+    try:
+        # Import tabular service
+        from tabular_service import get_tabular_predictor
+        
+        # Update task status
+        self.update_state(
+            state=TaskStatus.PROCESSING.value,
+            meta={
+                'status': TaskStatus.PROCESSING.value,
+                'progress': 0,
+                'message': 'Processing tabular prediction...',
+                'model_type': 'tabular_pytorch'
+            }
+        )
+        
+        # Get tabular predictor
+        tabular_predictor = get_tabular_predictor()
+        
+        # Validate input data
+        try:
+            request = ExoplanetPredictionRequest(**prediction_data)
+        except Exception as e:
+            logger.error(f"Invalid prediction data: {e}")
+            raise ValueError(f"Invalid input data: {e}")
+        
+        # Update progress
+        self.update_state(
+            state=TaskStatus.PROCESSING.value,
+            meta={
+                'status': TaskStatus.PROCESSING.value,
+                'progress': 50,
+                'message': 'Running TabularNet inference...',
+                'model_type': 'tabular_pytorch'
+            }
+        )
+        
+        # Make prediction
+        start_time = time.time()
+        result = tabular_predictor.predict(request)
+        processing_time = time.time() - start_time
+        
+        # Update final status
+        self.update_state(
+            state=TaskStatus.COMPLETED.value,
+            meta={
+                'status': TaskStatus.COMPLETED.value,
+                'progress': 100,
+                'message': 'Tabular prediction completed successfully',
+                'processing_time': processing_time,
+                'model_type': 'tabular_pytorch'
+            }
+        )
+        
+        logger.info(f"Tabular prediction task {task_id} completed in {processing_time:.2f}s")
+        
+        return {
+            'task_id': task_id,
+            'result': result.dict(),
+            'processing_time': processing_time,
+            'status': TaskStatus.COMPLETED.value,
+            'model_type': 'tabular_pytorch'
+        }
+        
+    except Exception as e:
+        error_msg = f"TabularNet prediction failed: {str(e)}"
+        logger.error(f"Task {task_id} failed: {error_msg}")
+        
+        self.update_state(
+            state=TaskStatus.FAILED.value,
+            meta={
+                'status': TaskStatus.FAILED.value,
+                'error': error_msg,
+                'progress': 0,
+                'model_type': 'tabular_pytorch'
+            }
+        )
+        
+        raise Exception(error_msg)
+
+@celery_app.task(bind=True, name='predict_batch_tabular')
+def predict_batch_tabular(self, predictions_data: List[Dict[str, Any]], batch_id: str) -> Dict[str, Any]:
+    """
+    Celery task for batch exoplanet predictions using TabularNet only
+    """
+    task_id = self.request.id
+    total_predictions = len(predictions_data)
+    logger.info(f"Starting tabular batch prediction task {task_id} with {total_predictions} predictions")
+    
+    try:
+        # Import tabular service
+        from tabular_service import get_tabular_predictor
+        
+        # Initial status update
+        self.update_state(
+            state=TaskStatus.PROCESSING.value,
+            meta={
+                'status': TaskStatus.PROCESSING.value,
+                'progress': 0,
+                'message': f'Processing batch of {total_predictions} tabular predictions...',
+                'batch_id': batch_id,
+                'total_predictions': total_predictions,
+                'completed_predictions': 0,
+                'model_type': 'tabular_pytorch'
+            }
+        )
+        
+        # Get tabular predictor
+        tabular_predictor = get_tabular_predictor()
+        
+        # Validate input data
+        requests = []
+        for i, prediction_data in enumerate(predictions_data):
+            try:
+                request = ExoplanetPredictionRequest(**prediction_data)
+                requests.append(request)
+            except Exception as e:
+                logger.error(f"Invalid prediction data at index {i}: {e}")
+                raise ValueError(f"Invalid input data at index {i}: {e}")
+        
+        # Update progress
+        self.update_state(
+            state=TaskStatus.PROCESSING.value,
+            meta={
+                'status': TaskStatus.PROCESSING.value,
+                'progress': 25,
+                'message': 'Running TabularNet batch inference...',
+                'batch_id': batch_id,
+                'total_predictions': total_predictions,
+                'completed_predictions': 0,
+                'model_type': 'tabular_pytorch'
+            }
+        )
+        
+        # Make batch predictions
+        start_time = time.time()
+        results = tabular_predictor.predict_batch(requests)
+        processing_time = time.time() - start_time
+        
+        # Update final status
+        self.update_state(
+            state=TaskStatus.COMPLETED.value,
+            meta={
+                'status': TaskStatus.COMPLETED.value,
+                'progress': 100,
+                'message': f'Batch tabular prediction completed successfully',
+                'batch_id': batch_id,
+                'total_predictions': total_predictions,
+                'completed_predictions': total_predictions,
+                'processing_time': processing_time,
+                'model_type': 'tabular_pytorch'
+            }
+        )
+        
+        logger.info(f"Tabular batch prediction task {task_id} completed {total_predictions} predictions in {processing_time:.2f}s")
+        
+        return {
+            'task_id': task_id,
+            'batch_id': batch_id,
+            'results': [result.dict() for result in results],
+            'total_predictions': total_predictions,
+            'processing_time': processing_time,
+            'status': TaskStatus.COMPLETED.value,
+            'model_type': 'tabular_pytorch'
+        }
+        
+    except Exception as e:
+        error_msg = f"TabularNet batch prediction failed: {str(e)}"
+        logger.error(f"Batch task {task_id} failed: {error_msg}")
+        
+        self.update_state(
+            state=TaskStatus.FAILED.value,
+            meta={
+                'status': TaskStatus.FAILED.value,
+                'error': error_msg,
+                'batch_id': batch_id,
+                'progress': 0,
+                'model_type': 'tabular_pytorch'
+            }
+        )
+        
+        raise Exception(error_msg)
+
 if __name__ == '__main__':
     # Start worker with: celery -A worker worker --loglevel=info
     celery_app.start()

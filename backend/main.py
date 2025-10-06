@@ -74,9 +74,19 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Exoplanet Detection API")
     
-    # Initialize ML model
+    # Initialize ML models
     if not initialize_predictor():
-        logger.warning("Failed to initialize ML model - will try to load on first request")
+        logger.warning("Failed to initialize main ML model - will try to load on first request")
+    
+    # Initialize TabularNet model
+    try:
+        from tabular_service import initialize_tabular_predictor
+        if not initialize_tabular_predictor():
+            logger.warning("Failed to initialize TabularNet model - will try to load on first request")
+        else:
+            logger.info("TabularNet model initialized successfully")
+    except Exception as e:
+        logger.error(f"Error initializing TabularNet model: {e}")
     
     # Test Redis connection
     try:
@@ -344,6 +354,136 @@ async def get_model_info():
     except Exception as e:
         logger.error(f"Error getting model info: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================================
+# TABULAR MODEL SPECIFIC ENDPOINTS
+# ============================================================================
+
+@app.post("/tabular/predict", response_model=SingleTaskResponse)
+async def predict_single_tabular(request: ExoplanetPredictionRequest):
+    """Submit a single prediction task using TabularNet only"""
+    try:
+        from worker import predict_single_tabular
+        
+        # Submit task to Celery
+        task = predict_single_tabular.delay(request.dict())
+        
+        return SingleTaskResponse(
+            task_id=task.id,
+            status=TaskStatus.PENDING,
+            estimated_completion_time=utc_now() + timedelta(seconds=10),  # Faster for tabular-only
+            message=f"TabularNet prediction task submitted successfully. Task ID: {task.id}"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error submitting TabularNet prediction task: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/tabular/predict/batch", response_model=BatchTaskResponse)
+async def predict_batch_tabular(request: BatchPredictionRequest):
+    """Submit a batch prediction task using TabularNet only"""
+    try:
+        from worker import predict_batch_tabular
+        
+        if len(request.predictions) > MAX_BATCH_SIZE:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Batch size too large. Maximum allowed: {MAX_BATCH_SIZE}"
+            )
+        
+        batch_id = str(uuid.uuid4())
+        prediction_data = [pred.dict() for pred in request.predictions]
+        
+        # Submit batch task
+        task = predict_batch_tabular.delay(prediction_data, batch_id)
+        
+        estimated_time = utc_now() + timedelta(
+            seconds=len(request.predictions) * 0.05  # Faster estimate for tabular-only (0.05s per prediction)
+        )
+        
+        return BatchTaskResponse(
+            batch_id=batch_id,
+            task_ids=[task.id],
+            estimated_completion_time=estimated_time,
+            total_tasks=len(request.predictions),
+            message=f"TabularNet batch prediction submitted successfully. Batch ID: {batch_id}"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error submitting TabularNet batch prediction: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/tabular/predict/sync", response_model=PredictionResult)
+async def predict_single_tabular_sync(request: ExoplanetPredictionRequest):
+    """Make a synchronous TabularNet prediction (for fast results)"""
+    try:
+        from tabular_service import get_tabular_predictor, initialize_tabular_predictor
+        
+        # Initialize tabular predictor if not already loaded
+        tabular_predictor = get_tabular_predictor()
+        if not tabular_predictor.is_loaded:
+            logger.info("Initializing TabularNet predictor for sync prediction")
+            if not initialize_tabular_predictor():
+                raise HTTPException(status_code=503, detail="Failed to load TabularNet model")
+        
+        # Make direct prediction
+        result = tabular_predictor.predict(request)
+        
+        logger.info(f"Sync TabularNet prediction completed in {result.processing_time_ms:.2f}ms")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error in sync TabularNet prediction: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/tabular/model/info")
+async def get_tabular_model_info():
+    """Get information about the TabularNet model"""
+    try:
+        from tabular_service import get_tabular_predictor, initialize_tabular_predictor
+        
+        # Initialize tabular predictor if not already loaded
+        tabular_predictor = get_tabular_predictor()
+        if not tabular_predictor.is_loaded:
+            logger.info("Initializing TabularNet predictor for model info")
+            if not initialize_tabular_predictor():
+                return {"error": "Failed to load TabularNet model", "is_loaded": False}
+        
+        return tabular_predictor.get_model_info()
+        
+    except Exception as e:
+        logger.error(f"Error getting TabularNet model info: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/tabular/health")
+async def tabular_health_check():
+    """Health check specifically for TabularNet model"""
+    try:
+        from tabular_service import get_tabular_predictor
+        
+        tabular_predictor = get_tabular_predictor()
+        
+        health_data = {
+            "status": "healthy" if tabular_predictor.is_loaded else "unhealthy",
+            "model_loaded": tabular_predictor.is_loaded,
+            "model_type": "TabularNet (PyTorch)",
+            "device": str(tabular_predictor.device) if tabular_predictor.is_loaded else "unknown",
+            "timestamp": utc_now().isoformat(),
+            "accuracy": "93.6%",
+            "parameters": "52,353" if tabular_predictor.is_loaded else "unknown"
+        }
+        
+        if not tabular_predictor.is_loaded:
+            logger.warning("TabularNet model health check failed - model not loaded")
+            raise HTTPException(status_code=503, detail="TabularNet model not loaded")
+            
+        return health_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"TabularNet health check failed: {e}")
+        raise HTTPException(status_code=503, detail="TabularNet service unhealthy")
 
 if __name__ == "__main__":
     import uvicorn
