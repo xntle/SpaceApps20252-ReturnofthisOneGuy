@@ -38,6 +38,10 @@ FEATURE_COLUMNS_PATH = os.getenv("FEATURE_COLUMNS_PATH", "./AI_Model_Forest/trai
 LABEL_ENCODER_PATH = os.getenv("LABEL_ENCODER_PATH", "./AI_Model_Forest/trained_model/label_encoder_combined.joblib")
 IMPUTER_PATH = os.getenv("IMPUTER_PATH", "./AI_Model_Forest/trained_model/imputer_medians_combined.joblib")
 
+# PyTorch Model Configuration
+PYTORCH_MODEL_PATH = os.getenv("PYTORCH_MODEL_PATH", "./exoplanet-detection-pipeline/models/enhanced_multimodal_fusion_model.pth")
+TABULAR_MODEL_PATH = os.getenv("TABULAR_MODEL_PATH", "./exoplanet-detection-pipeline/models/tabular_model.pth")
+
 # Task Configuration
 MAX_BATCH_SIZE = int(os.getenv("MAX_BATCH_SIZE", 1000))
 DEFAULT_TASK_TIMEOUT = int(os.getenv("DEFAULT_TASK_TIMEOUT", 120))  # 2 minutes
