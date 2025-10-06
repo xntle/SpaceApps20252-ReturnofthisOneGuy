@@ -172,7 +172,7 @@ function TabularPanel() {
     setAnalyzing(true);
     const row = rows[selected];
     try {
-      const res = await fetch("/api/predict/tabular", {
+      const res = await fetch("http://localhost:8000/tabular/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ row }),
@@ -476,8 +476,10 @@ function MultimodalPanel() {
     fd.append("residual_windows", residualFile);
     fd.append("pixel_diffs", pixelFile);
 
+    /*unsure why these have to be appended to the request body?*/
+
     try {
-      const res = await fetch("/api/predict/multimodal", {
+      const res = await fetch("http://localhost:8000/multimodal/predict/sync", {
         method: "POST",
         body: fd,
       });

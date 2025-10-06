@@ -1,0 +1,218 @@
+kepid,path,koi_disposition,label
+10024051,processed/residual_windows_std/residual_10024051.npy,CONFIRMED,1
+10028535,processed/residual_windows_std/residual_10028535.npy,CONFIRMED,1
+10090151,processed/residual_windows_std/residual_10090151.npy,FALSE POSITIVE,0
+10141900,processed/residual_windows_std/residual_10141900.npy,CONFIRMED,1
+10153827,processed/residual_windows_std/residual_10153827.npy,FALSE POSITIVE,0
+10153855,processed/residual_windows_std/residual_10153855.npy,CONFIRMED,1
+10264202,processed/residual_windows_std/residual_10264202.npy,FALSE POSITIVE,0
+10328393,processed/residual_windows_std/residual_10328393.npy,CONFIRMED,1
+10332883,processed/residual_windows_std/residual_10332883.npy,CONFIRMED,1
+10468885,processed/residual_windows_std/residual_10468885.npy,CONFIRMED,1
+10485069,processed/residual_windows_std/residual_10485069.npy,FALSE POSITIVE,0
+10485179,processed/residual_windows_std/residual_10485179.npy,FALSE POSITIVE,0
+10489345,processed/residual_windows_std/residual_10489345.npy,CONFIRMED,1
+10526549,processed/residual_windows_std/residual_10526549.npy,CONFIRMED,1
+10527135,processed/residual_windows_std/residual_10527135.npy,FALSE POSITIVE,0
+10583066,processed/residual_windows_std/residual_10583066.npy,CONFIRMED,1
+10585738,processed/residual_windows_std/residual_10585738.npy,CONFIRMED,1
+10620329,processed/residual_windows_std/residual_10620329.npy,FALSE POSITIVE,0
+10649230,processed/residual_windows_std/residual_10649230.npy,FALSE POSITIVE,0
+10743597,processed/residual_windows_std/residual_10743597.npy,FALSE POSITIVE,0
+10785538,processed/residual_windows_std/residual_10785538.npy,FALSE POSITIVE,0
+10797460,processed/residual_windows_std/residual_10797460.npy,CONFIRMED,1
+10848459,processed/residual_windows_std/residual_10848459.npy,FALSE POSITIVE,0
+10854555,processed/residual_windows_std/residual_10854555.npy,CONFIRMED,1
+10872983,processed/residual_windows_std/residual_10872983.npy,CONFIRMED,1
+10879656,processed/residual_windows_std/residual_10879656.npy,FALSE POSITIVE,0
+10910878,processed/residual_windows_std/residual_10910878.npy,CONFIRMED,1
+10920420,processed/residual_windows_std/residual_10920420.npy,FALSE POSITIVE,0
+10973664,processed/residual_windows_std/residual_10973664.npy,CONFIRMED,1
+10975146,processed/residual_windows_std/residual_10975146.npy,CONFIRMED,1
+10991239,processed/residual_windows_std/residual_10991239.npy,FALSE POSITIVE,0
+11176166,processed/residual_windows_std/residual_11176166.npy,CONFIRMED,1
+11193447,processed/residual_windows_std/residual_11193447.npy,FALSE POSITIVE,0
+11401182,processed/residual_windows_std/residual_11401182.npy,CONFIRMED,1
+11446443,processed/residual_windows_std/residual_11446443.npy,CONFIRMED,1
+11547505,processed/residual_windows_std/residual_11547505.npy,CONFIRMED,1
+11560382,processed/residual_windows_std/residual_11560382.npy,FALSE POSITIVE,0
+11560397,processed/residual_windows_std/residual_11560397.npy,FALSE POSITIVE,0
+11560431,processed/residual_windows_std/residual_11560431.npy,FALSE POSITIVE,0
+11560447,processed/residual_windows_std/residual_11560447.npy,FALSE POSITIVE,0
+11600889,processed/residual_windows_std/residual_11600889.npy,CONFIRMED,1
+11611600,processed/residual_windows_std/residual_11611600.npy,CONFIRMED,1
+11670125,processed/residual_windows_std/residual_11670125.npy,CONFIRMED,1
+11752632,processed/residual_windows_std/residual_11752632.npy,CONFIRMED,1
+11774383,processed/residual_windows_std/residual_11774383.npy,FALSE POSITIVE,0
+11774387,processed/residual_windows_std/residual_11774387.npy,FALSE POSITIVE,0
+11825057,processed/residual_windows_std/residual_11825057.npy,FALSE POSITIVE,0
+11904151,processed/residual_windows_std/residual_11904151.npy,CONFIRMED,1
+11968463,processed/residual_windows_std/residual_11968463.npy,CONFIRMED,1
+11972872,processed/residual_windows_std/residual_11972872.npy,FALSE POSITIVE,0
+12115188,processed/residual_windows_std/residual_12115188.npy,FALSE POSITIVE,0
+12170648,processed/residual_windows_std/residual_12170648.npy,FALSE POSITIVE,0
+12255382,processed/residual_windows_std/residual_12255382.npy,FALSE POSITIVE,0
+12356746,processed/residual_windows_std/residual_12356746.npy,FALSE POSITIVE,0
+12405333,processed/residual_windows_std/residual_12405333.npy,CONFIRMED,1
+12459808,processed/residual_windows_std/residual_12459808.npy,FALSE POSITIVE,0
+12557548,processed/residual_windows_std/residual_12557548.npy,CONFIRMED,1
+2720309,processed/residual_windows_std/residual_2720309.npy,FALSE POSITIVE,0
+3003019,processed/residual_windows_std/residual_3003019.npy,FALSE POSITIVE,0
+3114661,processed/residual_windows_std/residual_3114661.npy,FALSE POSITIVE,0
+3116302,processed/residual_windows_std/residual_3116302.npy,FALSE POSITIVE,0
+3231137,processed/residual_windows_std/residual_3231137.npy,FALSE POSITIVE,0
+3231341,processed/residual_windows_std/residual_3231341.npy,CONFIRMED,1
+3233043,processed/residual_windows_std/residual_3233043.npy,FALSE POSITIVE,0
+3239636,processed/residual_windows_std/residual_3239636.npy,FALSE POSITIVE,0
+3247503,processed/residual_windows_std/residual_3247503.npy,FALSE POSITIVE,0
+3341760,processed/residual_windows_std/residual_3341760.npy,FALSE POSITIVE,0
+3428359,processed/residual_windows_std/residual_3428359.npy,FALSE POSITIVE,0
+3444588,processed/residual_windows_std/residual_3444588.npy,CONFIRMED,1
+3448323,processed/residual_windows_std/residual_3448323.npy,FALSE POSITIVE,0
+3542222,processed/residual_windows_std/residual_3542222.npy,FALSE POSITIVE,0
+3557341,processed/residual_windows_std/residual_3557341.npy,FALSE POSITIVE,0
+3557493,processed/residual_windows_std/residual_3557493.npy,FALSE POSITIVE,0
+3632089,processed/residual_windows_std/residual_3632089.npy,CONFIRMED,1
+3642289,processed/residual_windows_std/residual_3642289.npy,CONFIRMED,1
+3764714,processed/residual_windows_std/residual_3764714.npy,FALSE POSITIVE,0
+3834322,processed/residual_windows_std/residual_3834322.npy,FALSE POSITIVE,0
+3848919,processed/residual_windows_std/residual_3848919.npy,FALSE POSITIVE,0
+3848948,processed/residual_windows_std/residual_3848948.npy,FALSE POSITIVE,0
+3869825,processed/residual_windows_std/residual_3869825.npy,FALSE POSITIVE,0
+4055304,processed/residual_windows_std/residual_4055304.npy,CONFIRMED,1
+4069063,processed/residual_windows_std/residual_4069063.npy,FALSE POSITIVE,0
+4144576,processed/residual_windows_std/residual_4144576.npy,CONFIRMED,1
+4164922,processed/residual_windows_std/residual_4164922.npy,CONFIRMED,1
+4242692,processed/residual_windows_std/residual_4242692.npy,CONFIRMED,1
+4381282,processed/residual_windows_std/residual_4381282.npy,FALSE POSITIVE,0
+4479633,processed/residual_windows_std/residual_4479633.npy,FALSE POSITIVE,0
+4551328,processed/residual_windows_std/residual_4551328.npy,FALSE POSITIVE,0
+4644952,processed/residual_windows_std/residual_4644952.npy,CONFIRMED,1
+4736569,processed/residual_windows_std/residual_4736569.npy,CONFIRMED,1
+4852528,processed/residual_windows_std/residual_4852528.npy,CONFIRMED,1
+5119143,processed/residual_windows_std/residual_5119143.npy,FALSE POSITIVE,0
+5128966,processed/residual_windows_std/residual_5128966.npy,FALSE POSITIVE,0
+5175986,processed/residual_windows_std/residual_5175986.npy,CONFIRMED,1
+5201593,processed/residual_windows_std/residual_5201593.npy,FALSE POSITIVE,0
+5340878,processed/residual_windows_std/residual_5340878.npy,CONFIRMED,1
+5358624,processed/residual_windows_std/residual_5358624.npy,CONFIRMED,1
+5371777,processed/residual_windows_std/residual_5371777.npy,CONFIRMED,1
+5389632,processed/residual_windows_std/residual_5389632.npy,FALSE POSITIVE,0
+5436502,processed/residual_windows_std/residual_5436502.npy,CONFIRMED,1
+5440651,processed/residual_windows_std/residual_5440651.npy,FALSE POSITIVE,0
+5471158,processed/residual_windows_std/residual_5471158.npy,FALSE POSITIVE,0
+5471415,processed/residual_windows_std/residual_5471415.npy,FALSE POSITIVE,0
+5511081,processed/residual_windows_std/residual_5511081.npy,CONFIRMED,1
+5513012,processed/residual_windows_std/residual_5513012.npy,CONFIRMED,1
+5559651,processed/residual_windows_std/residual_5559651.npy,FALSE POSITIVE,0
+5563937,processed/residual_windows_std/residual_5563937.npy,FALSE POSITIVE,0
+5636648,processed/residual_windows_std/residual_5636648.npy,FALSE POSITIVE,0
+5642620,processed/residual_windows_std/residual_5642620.npy,CANDIDATE,1
+5695904,processed/residual_windows_std/residual_5695904.npy,FALSE POSITIVE,0
+5709889,processed/residual_windows_std/residual_5709889.npy,FALSE POSITIVE,0
+5725087,processed/residual_windows_std/residual_5725087.npy,FALSE POSITIVE,0
+5802246,processed/residual_windows_std/residual_5802246.npy,FALSE POSITIVE,0
+5809890,processed/residual_windows_std/residual_5809890.npy,CONFIRMED,1
+5876368,processed/residual_windows_std/residual_5876368.npy,FALSE POSITIVE,0
+5895158,processed/residual_windows_std/residual_5895158.npy,CONFIRMED,1
+5941160,processed/residual_windows_std/residual_5941160.npy,CONFIRMED,1
+5980208,processed/residual_windows_std/residual_5980208.npy,CONFIRMED,1
+6028860,processed/residual_windows_std/residual_6028860.npy,FALSE POSITIVE,0
+6044553,processed/residual_windows_std/residual_6044553.npy,FALSE POSITIVE,0
+6047498,processed/residual_windows_std/residual_6047498.npy,FALSE POSITIVE,0
+6060203,processed/residual_windows_std/residual_6060203.npy,CONFIRMED,1
+6129524,processed/residual_windows_std/residual_6129524.npy,CONFIRMED,1
+6153201,processed/residual_windows_std/residual_6153201.npy,FALSE POSITIVE,0
+6185496,processed/residual_windows_std/residual_6185496.npy,FALSE POSITIVE,0
+6187341,processed/residual_windows_std/residual_6187341.npy,FALSE POSITIVE,0
+6198256,processed/residual_windows_std/residual_6198256.npy,FALSE POSITIVE,0
+6200235,processed/residual_windows_std/residual_6200235.npy,CONFIRMED,1
+6265792,processed/residual_windows_std/residual_6265792.npy,CONFIRMED,1
+6269070,processed/residual_windows_std/residual_6269070.npy,CONFIRMED,1
+6294819,processed/residual_windows_std/residual_6294819.npy,CONFIRMED,1
+6310636,processed/residual_windows_std/residual_6310636.npy,CONFIRMED,1
+6362874,processed/residual_windows_std/residual_6362874.npy,CONFIRMED,1
+6442377,processed/residual_windows_std/residual_6442377.npy,CONFIRMED,1
+6527016,processed/residual_windows_std/residual_6527016.npy,FALSE POSITIVE,0
+6531496,processed/residual_windows_std/residual_6531496.npy,FALSE POSITIVE,0
+6531801,processed/residual_windows_std/residual_6531801.npy,FALSE POSITIVE,0
+6607644,processed/residual_windows_std/residual_6607644.npy,CONFIRMED,1
+6614629,processed/residual_windows_std/residual_6614629.npy,FALSE POSITIVE,0
+6666233,processed/residual_windows_std/residual_6666233.npy,FALSE POSITIVE,0
+6674908,processed/residual_windows_std/residual_6674908.npy,FALSE POSITIVE,0
+6690836,processed/residual_windows_std/residual_6690836.npy,CONFIRMED,1
+6697756,processed/residual_windows_std/residual_6697756.npy,CONFIRMED,1
+6755944,processed/residual_windows_std/residual_6755944.npy,CONFIRMED,1
+6792124,processed/residual_windows_std/residual_6792124.npy,FALSE POSITIVE,0
+6841577,processed/residual_windows_std/residual_6841577.npy,FALSE POSITIVE,0
+6927629,processed/residual_windows_std/residual_6927629.npy,FALSE POSITIVE,0
+6934291,processed/residual_windows_std/residual_6934291.npy,CONFIRMED,1
+6964929,processed/residual_windows_std/residual_6964929.npy,CONFIRMED,1
+7008149,processed/residual_windows_std/residual_7008149.npy,FALSE POSITIVE,0
+7269881,processed/residual_windows_std/residual_7269881.npy,FALSE POSITIVE,0
+7284688,processed/residual_windows_std/residual_7284688.npy,FALSE POSITIVE,0
+7379385,processed/residual_windows_std/residual_7379385.npy,FALSE POSITIVE,0
+7516809,processed/residual_windows_std/residual_7516809.npy,FALSE POSITIVE,0
+7593110,processed/residual_windows_std/residual_7593110.npy,FALSE POSITIVE,0
+7605093,processed/residual_windows_std/residual_7605093.npy,CONFIRMED,1
+7826620,processed/residual_windows_std/residual_7826620.npy,CONFIRMED,1
+7838675,processed/residual_windows_std/residual_7838675.npy,CONFIRMED,1
+7938883,processed/residual_windows_std/residual_7938883.npy,FALSE POSITIVE,0
+8022489,processed/residual_windows_std/residual_8022489.npy,CONFIRMED,1
+8110758,processed/residual_windows_std/residual_8110758.npy,FALSE POSITIVE,0
+8123937,processed/residual_windows_std/residual_8123937.npy,FALSE POSITIVE,0
+8235924,processed/residual_windows_std/residual_8235924.npy,CONFIRMED,1
+8240861,processed/residual_windows_std/residual_8240861.npy,FALSE POSITIVE,0
+8247638,processed/residual_windows_std/residual_8247638.npy,CONFIRMED,1
+8247771,processed/residual_windows_std/residual_8247771.npy,CONFIRMED,1
+8278371,processed/residual_windows_std/residual_8278371.npy,CONFIRMED,1
+8398290,processed/residual_windows_std/residual_8398290.npy,FALSE POSITIVE,0
+8416523,processed/residual_windows_std/residual_8416523.npy,CONFIRMED,1
+8487645,processed/residual_windows_std/residual_8487645.npy,FALSE POSITIVE,0
+8487805,processed/residual_windows_std/residual_8487805.npy,FALSE POSITIVE,0
+8552498,processed/residual_windows_std/residual_8552498.npy,FALSE POSITIVE,0
+8552500,processed/residual_windows_std/residual_8552500.npy,FALSE POSITIVE,0
+8552540,processed/residual_windows_std/residual_8552540.npy,FALSE POSITIVE,0
+8558011,processed/residual_windows_std/residual_8558011.npy,CONFIRMED,1
+8561063,processed/residual_windows_std/residual_8561063.npy,CONFIRMED,1
+8609450,processed/residual_windows_std/residual_8609450.npy,CONFIRMED,1
+8672910,processed/residual_windows_std/residual_8672910.npy,CONFIRMED,1
+8804845,processed/residual_windows_std/residual_8804845.npy,CONFIRMED,1
+8895758,processed/residual_windows_std/residual_8895758.npy,CONFIRMED,1
+8947520,processed/residual_windows_std/residual_8947520.npy,CONFIRMED,1
+8957572,processed/residual_windows_std/residual_8957572.npy,FALSE POSITIVE,0
+8962094,processed/residual_windows_std/residual_8962094.npy,CONFIRMED,1
+8977176,processed/residual_windows_std/residual_8977176.npy,FALSE POSITIVE,0
+9022166,processed/residual_windows_std/residual_9022166.npy,CONFIRMED,1
+9027841,processed/residual_windows_std/residual_9027841.npy,FALSE POSITIVE,0
+9044228,processed/residual_windows_std/residual_9044228.npy,CONFIRMED,1
+9092504,processed/residual_windows_std/residual_9092504.npy,CONFIRMED,1
+9153554,processed/residual_windows_std/residual_9153554.npy,FALSE POSITIVE,0
+9221517,processed/residual_windows_std/residual_9221517.npy,CONFIRMED,1
+9278725,processed/residual_windows_std/residual_9278725.npy,CONFIRMED,1
+9353314,processed/residual_windows_std/residual_9353314.npy,CONFIRMED,1
+9353742,processed/residual_windows_std/residual_9353742.npy,CONFIRMED,1
+9388479,processed/residual_windows_std/residual_9388479.npy,CONFIRMED,1
+9391208,processed/residual_windows_std/residual_9391208.npy,CONFIRMED,1
+9415172,processed/residual_windows_std/residual_9415172.npy,CONFIRMED,1
+9451096,processed/residual_windows_std/residual_9451096.npy,FALSE POSITIVE,0
+9467404,processed/residual_windows_std/residual_9467404.npy,CONFIRMED,1
+9473078,processed/residual_windows_std/residual_9473078.npy,CONFIRMED,1
+9474483,processed/residual_windows_std/residual_9474483.npy,FALSE POSITIVE,0
+9474485,processed/residual_windows_std/residual_9474485.npy,FALSE POSITIVE,0
+9474493,processed/residual_windows_std/residual_9474493.npy,FALSE POSITIVE,0
+9475552,processed/residual_windows_std/residual_9475552.npy,CONFIRMED,1
+9529294,processed/residual_windows_std/residual_9529294.npy,FALSE POSITIVE,0
+9597729,processed/residual_windows_std/residual_9597729.npy,FALSE POSITIVE,0
+9644411,processed/residual_windows_std/residual_9644411.npy,FALSE POSITIVE,0
+9655424,processed/residual_windows_std/residual_9655424.npy,FALSE POSITIVE,0
+9674592,processed/residual_windows_std/residual_9674592.npy,FALSE POSITIVE,0
+9718066,processed/residual_windows_std/residual_9718066.npy,CONFIRMED,1
+9719636,processed/residual_windows_std/residual_9719636.npy,FALSE POSITIVE,0
+9787239,processed/residual_windows_std/residual_9787239.npy,CONFIRMED,1
+9813678,processed/residual_windows_std/residual_9813678.npy,FALSE POSITIVE,0
+9825174,processed/residual_windows_std/residual_9825174.npy,CONFIRMED,1
+9873254,processed/residual_windows_std/residual_9873254.npy,CONFIRMED,1
+9934274,processed/residual_windows_std/residual_9934274.npy,FALSE POSITIVE,0
+9953736,processed/residual_windows_std/residual_9953736.npy,FALSE POSITIVE,0
+9967771,processed/residual_windows_std/residual_9967771.npy,CONFIRMED,1
