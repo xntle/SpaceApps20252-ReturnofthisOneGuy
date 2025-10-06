@@ -26,15 +26,14 @@ import yaml
 # ----------------------------
 # Paths
 # ----------------------------
-BASE = Path(__file__).parent.parent.absolute()
+BASE = Path(__file__).parent.absolute()
 RES_DIR = BASE / "residual_model" / "models"
 PIX_DIR = BASE / "pixel_CNN" / "models"
 RF_DIR  = BASE / "AI_Model_Forest" / "models"   # change if you do export RF OOF later
 
-FUSION_DIR = BASE / "fusion"
-MODEL_DIR  = FUSION_DIR / "models"
+MODEL_DIR = BASE / "models"
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
-CFG_PATH   = FUSION_DIR / "config.yaml"
+CFG_PATH = BASE / "config.yaml"
 
 # ----------------------------
 # Utils

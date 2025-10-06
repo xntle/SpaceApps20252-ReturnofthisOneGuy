@@ -19,12 +19,15 @@ pydantic>=1.8.0
 pyyaml>=6.0
 joblib>=1.1.0
 
-# Plotting and visualization (optional, for development)
-matplotlib>=3.5.0
-seaborn>=0.11.0
+# HTTP requests for API testing
+requests>=2.25.0
 
 # SMOTE for data balancing
 imbalanced-learn>=0.8.0
+
+# Plotting and visualization (optional, for development)
+matplotlib>=3.5.0
+seaborn>=0.11.0
 
 # Development tools (optional)
 jupyter>=1.0.0

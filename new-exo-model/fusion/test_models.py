@@ -71,7 +71,10 @@ class PixelCNN2D(nn.Module):
 # Test residual model
 print("Testing Residual CNN...")
 res_model = LightweightResidualCNN()
-res_state = torch.load('/home/roshan/Desktop/new-exo-model/residual_model/models/residual_cnn_best_fold0.pt', map_location='cpu')
+# Load real residual model weights
+import os
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+res_state = torch.load(os.path.join(project_root, 'residual_model/models/residual_cnn_best_fold0.pt'), map_location='cpu')
 res_model.load_state_dict(res_state)
 res_model.eval()  # Important: set to eval mode to avoid BatchNorm issues
 print("✅ Residual CNN loaded successfully!")
@@ -85,7 +88,7 @@ with torch.no_grad():
 # Test pixel model  
 print("\nTesting Pixel CNN...")
 pix_model = PixelCNN2D()
-pix_state = torch.load('/home/roshan/Desktop/new-exo-model/pixel_CNN/models/pixel_cnn_best_fold0.pt', map_location='cpu')
+pix_state = torch.load(os.path.join(project_root, 'pixel_CNN/models/pixel_cnn_best_fold0.pt'), map_location='cpu')
 pix_model.load_state_dict(pix_state)
 pix_model.eval()  # Important: set to eval mode
 print("✅ Pixel CNN loaded successfully!")
